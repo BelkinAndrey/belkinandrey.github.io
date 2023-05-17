@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>FLUX Simple</title>
+    <link rel="stylesheet" type="text/css" href="css/editor.css" />
+    <link rel="stylesheet" type="text/css" href="build/rappid.css">
+    <script src="./data/neurons_1.json"></script>
+    <script src="./data/neurons_2.json"></script>
+
+    <script src="https://unpkg.com/gpu.js@latest/dist/gpu-browser.min.js"></script>
+</head>
+<body>
+    
+  
+    <script>
+      SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function (toElement) {
+        return toElement.getScreenCTM().inverse().multiply(this.getScreenCTM());
+      };
+    </script>
+
+    
+    <div class="top">
+      <div class="logo">
+        <img src="img/logo.png" alt="Logo">
+        <div style="color: red;">beta</div>
+        <div class="button-play">
+          <button id="play-stop-btn">
+            <img src="img/play.png" alt="Play/Stop">
+          </button>
+        </div>
+      </div>      
+      <div class="button-top">
+        <button id="remove-all-btn">
+          <img src="img/clean.png" alt="RemoveAll">
+        </button>
+        <button id="save-btn">
+          <img src="img/download.png" alt="Save">
+        </button>
+        <button id="open-btn">
+          <img src="img/open.png" alt="Open">
+        </button>
+        <select id="select-file">
+          <option value="null" disabled selected>Load..</option>
+          <option value="neurons_1">neurons_1</option>
+          <option value="neurons_2">neurons_2</option>
+        </select>
+      </div>
+    </div>
+    <div class="left" style="width: 200px">
+      <ul id="node-list">
+      </ul>
+    </div>
+    <div class="center">
+      <div id="paper" class="paper"></div>
+    </div>
+    <div class="right" style="width: 340px">
+      <div class="setting">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <b id='node-label' style="margin-right: auto; margin-left: 2px;">Node</b>
+          <div >
+            <button id="button-default-node">default</button>
+            <button id="button-applay-node">Applay</button>
+          </div>
+        </div>
+        <div>
+          <div class="switch">
+            <label>
+              <input type="radio" name="node-type" value="1" checked>
+              <div class="option">
+                <img src="img/image5.png" alt="neuron">
+                <span class="label-text">neuron</span>
+              </div>
+            </label>
+            <label>
+              <input type="radio" name="node-type" value="2">
+              <div class="option">
+                <img src="img/image6.png" alt="actuator">
+                <span class="label-text">actuator</span>
+              </div>
+            </label>
+            <label>
+              <input type="radio" name="node-type" value="3">
+              <div class="option">
+                <img src="img/image7.png" alt="sensor">
+                <span class="label-text">sensor</span>
+              </div>
+            </label>
+            <label>
+              <input type="radio" name="node-type" value="4">
+              <div class="option">
+                <img src="img/image8.png" alt="module">
+                <span class="label-text">module</span>
+              </div>
+            </label>
+          </div>
+          <div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">level:</label>
+              <label class="output-label" id="level-output">_</label>
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">threshold:</label>
+              <label class="output-label"  id="threshold-output">_</label>
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">threshold:</label>
+              <input type="number" id="threshold-input" class="input-field" placeholder="0" value="10">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">threshold-max:</label>
+              <input type="number" id="threshold-max-input" class="input-field" placeholder="0" value="100" min="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">threshold-min:</label>
+              <input type="number" id="threshold-min-input" class="input-field" placeholder="0" value="0" min="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">level-max:</label>
+              <input type="number" id="level-max-input" class="input-field" placeholder="0" value="200" min="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">level-min:</label>
+              <input type="number" id="level-min-input" class="input-field" placeholder="0" value="0" min="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">level-leak:</label>
+              <input type="number" id="level-leak-input" class="input-field" placeholder="0" value="1" min="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">refractory period:</label>
+              <input type="number" id="refractory-period-input" class="input-field" placeholder="0" value="0" min="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">modulation leak:</label>
+              <input type="number" id="modulation-leak-input" class="input-field" placeholder="0" value="0" min="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container" data-value="3">
+              <label class="input-label">key action:</label>
+              <input type="text" id="key-input" class="input-field" value="" onkeydown="return handleKeyDown(event)">
+            </div>
+            <div class="input-container" data-value="2,3">
+              <label class="input-label">id:</label>
+              <input type="text" id="id-input" class="input-field" value="">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="setting">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <b id="link-label" style="margin-right: auto; margin-left: 2px;">Link</b>
+          <div >
+            <button id="button-default-link">default</button>
+            <button id="button-applay-link">Applay</button>
+          </div>
+        </div>
+        <div class="switch">
+          <label>
+            <input type="radio" name="link-type" value="1" checked>
+            <div class="option">
+              <img src="img/image1.png" alt="direct">
+              <span class="label-text">direct</span>
+            </div>
+          </label>
+          <label>
+            <input type="radio" name="link-type" value="2">
+            <div class="option">
+              <img src="img/image2.png" alt="modulating">
+              <span class="label-text">modulating</span>
+            </div>
+          </label>
+          <label>
+            <input type="radio" name="link-type" value="3">
+            <div class="option">
+              <img src="img/image3.png" alt="electrical">
+              <span class="label-text">electrical</span>
+            </div>
+          </label>
+          <label>
+            <input type="radio" name="link-type" value="4">
+            <div class="option">
+              <img src="img/image4.png" alt="hebb">
+              <span class="label-text">hebb</span>
+            </div>
+          </label>
+        </div>
+        <div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">weight:</label>
+            <label class="output-label" id="weight-output">_</label>
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">target weight:</label>
+            <label class="output-label" id="target-weight-output">_</label>
+          </div>
+          <div class="input-container-link open" data-value="1,2,4">
+            <label class="input-label">weight:</label>
+            <input type="number" id="weight-input" class="input-field" placeholder="10" value="10">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">weight-max:</label>
+            <input type="number" id="weight-max-input" class="input-field" placeholder="100" value="100">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">weight-min:</label>
+            <input type="number" id="weight-min-input" class="input-field" placeholder="-100" value="-100">
+          </div>
+          <div class="input-container-link open" data-value="1,2,3,4">
+            <label class="input-label">delay:</label>
+            <input type="number" id="delay-input" class="input-field" placeholder="0" value="0" min="0">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">time before:</label>
+            <input type="number" id="time-before-input" class="input-field" placeholder="1" value="1">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">time after:</label>
+            <input type="number" id="time-after-input" class="input-field" placeholder="1" value="1">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">weight-up:</label>
+            <input type="number" id="weight-up-input" class="input-field" placeholder="0.1" value="0.1">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">weight-down:</label>
+            <input type="number" id="weight-down-input" class="input-field" placeholder="0.001" value="0.001">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">plasticity:</label>
+            <input type="number" id="plasticity-input" class="input-field" placeholder="1" value="1">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">memory time:</label>
+            <input type="number" id="memory-time-input" class="input-field" placeholder="1000000" value="1000000">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom">version: 0.23.05.13</div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.4.1/backbone.js"></script>
+    <script src="./build/rappid.js"></script>
+
+    <script src="src/spaceNeuron.js"></script> 
+    <script src="src/controller.js"></script>
+    <script src="src/controllers/edit-controller.js"></script>
+    <script src="src/controllers/view-controller.js"></script>
+    <script src="src/dijkstra.js"></script>
+    <script src="src/editor.js"></script>
+
+    <!--Скрипт для загрузки поключённых файлов-->
+    <script>
+      const selectFile = document.getElementById('select-file');
+      const fileList = { neurons_1, neurons_2 };
+      selectFile.addEventListener('change', (event) => {
+        const nameValue = event.target.value;
+        RemoveAll();
+        graph.clear();
+        space = fileList[nameValue];
+        localStorage.setItem('space', JSON.stringify(space));
+        StartLoad();
+        reFreshInspector();
+        selectFile.value = 'null';
+        selectFile.children[0].innerHTML = nameValue;
+        radioNode[nodeType - 1].checked = true;
+        changeRadioNode();
+      });
+    </script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+body {
+    margin: 0;
+    display: grid;
+    grid-template-columns: minmax(5px, auto) 1fr minmax(5px, auto);
+    grid-template-rows: minmax(40px, auto) 1fr minmax(40px, auto);
+    grid-template-areas:
+        "top top top"
+        "left center right"
+        "bottom bottom bottom";
+    height: 100vh;
+}
+
+html, body { 
+    margin: 0; padding: 0; 
+    font-family: 'Roboto', sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    line-height: 1.5;
+    font-size: 14px;
+    color: rgb(177, 177, 177);
+}
+
+.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    grid-area: top;
+    background-color: #25232f;
+}
+
+.bottom {
+    grid-area: bottom;
+    background-color: #25232f;
+}
+
+.left {
+    grid-area: left;
+    background-color: #1c1a23;
+    overflow-x: hidden;
+    white-space: nowrap;
+}
+
+.right {
+    grid-area: right;
+    background-color: #1c1a23;
+    overflow-x: hidden;
+}
+
+.center {
+    grid-area: center;
+    background-color: #1c1a23;
+}
+
+.button-top {
+  min-width: 320px;
+  display: flex;
+  justify-content: flex-start;
+  margin-right: 5px;
+}
+
+.button-play {
+  display: flex;
+  justify-content: flex-start;
+  margin-left: 30px;
+}
+
+.logo {
+  display: flex;
+}
+
+.left ul ul ul ul{
+    display: none;
+    
+}
+
+
+.left ul {
+    position: relative;
+    left: 10px;
+    padding: 1px;
+    margin-right: 20px;
+}
+
+
+.left .arrow {
+    position: absolute;
+    cursor: pointer;
+}
+
+.left .arrow:before {
+    content: "";
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 5px solid rgb(114, 114, 114);
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+  
+  .left .arrow.open:before {
+    transform: rotate(90deg);
+  }
+  
+  .left ul.open {
+    display: block;
+  }
+
+
+ /* Установите ширину полосы прокрутки */
+::-webkit-scrollbar {
+    width: 0.2em;
+  }
+  
+/* Установите цвет фона трека */
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+  
+  /* Установите цвет полосы прокрутки */
+::-webkit-scrollbar-thumb {
+    background-color: #535353;
+    border-radius: 1em;
+}
+
+
+.top button {
+  background-color: #25232f;
+  border:  1px solid #25232f;
+  width: 30px;
+  height: 30px;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.top button:hover{
+  border: 1px solid #757575;
+}
+
+.top button:active{
+  border: 1px solid #b1b1b1;
+}
+
+.top button img {
+  display: block;
+  width: 25px;
+  height: 25px;
+}
+
+.setting {
+    margin: 5px; /* задаем отступы */
+    border: 1px solid #535353; /* задаем тонкую белую рамку */
+    padding: 4px;
+}
+
+.setting button {
+    margin-left: auto;
+    margin-right: 2px;
+    background-color: #1c1a23;
+    padding: 1px;
+    color: rgb(177, 177, 177);
+    border: 1px solid #535353;
+}
+
+.setting button:hover{
+    color: #ffffff;
+    border: 1px solid #ffffff;
+}
+
+.setting button:active{
+    color: #ffffff;
+    border: 1px solid #535353;
+}
+
+select {
+  min-width: 200px;
+  margin: 5px;
+  background-color: #25232f;
+  color: #b1b1b1;
+}
+
+select:focus {
+  outline: none;
+}
+
+/*  ---------------   */
+
+
+.switch {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.switch label {
+  position: relative;
+  display: inline-block;
+  width: 75px;
+  height: 75px;
+  margin: 2px;
+  cursor: pointer;
+}
+
+.switch input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.switch .option {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #1c1a23;
+  overflow: hidden;
+}
+
+.switch img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -80%);
+  width: 50px;
+  height: 50px;
+}
+
+.switch .label-text {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 1px;
+  font-size: 12px;
+  text-align: center;
+
+}
+
+.switch input[type="radio"]:checked + .option {
+  border-color: #4666E5;
+}
+
+.switch label:hover .option {
+    /*background-color: #f0f0f0;*/
+    border-color: #757575;
+}
+
+.input-container{
+  display: none;
+}
+
+
+.input-container.open {
+    display: block;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 320px;
+    margin: auto;
+    margin-top: 10px;
+  }
+  
+  .input-label {
+    width: 135px;
+    margin-right: 10px;
+  }
+
+  .output-label {
+    flex: 1;
+    height: 15px;
+    padding: 2px;
+    left: 10px;
+  }
+  
+  .input-field {
+    flex: 1;
+    height: 15px;
+    padding: 2px;
+    border: 1px solid #25232f;
+    background-color: #25232f;
+    color: #b1b1b1;
+
+  }
+
+
+.input-field:focus {
+    background-color: #25232f;
+    border-color: #4666E5 !important;
+    border-radius: 0;
+  }
+
+
+.input-container-link{
+  display: none;
+}
+
+.input-container-link.open {
+  display: block;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 320px;
+  margin: auto;
+  margin-top: 10px;
+}
