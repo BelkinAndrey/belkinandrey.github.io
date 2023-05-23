@@ -4,7 +4,7 @@
     <meta charset="UTF-8"/>
     <title>FLUX Simple</title>
     <link rel="stylesheet" type="text/css" href="css/editor.css" />
-    <link rel="stylesheet" type="text/css" href="build/rappid.css">
+    <link rel="stylesheet" type="text/css" href="build/joint.css">
     <script src="./data/neurons_1.json"></script>
     <script src="./data/neurons_2.json"></script>
 
@@ -236,22 +236,31 @@
         </div>
       </div>
     </div>
-    <div class="bottom">version: 0.23.05.13</div>
+    <div class="bottom"> 
+      <div class="button-bottom">
+        <div>Spike Visualization:</div>
+        <label class="chec">
+          <input type="checkbox" id="VisSpike" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div style="margin-right: 10px;">version: 0.2023.05.20</div>
+    </div>
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.4.1/backbone.js"></script>
-    <script src="./build/rappid.js"></script>
+    <script src="./build/joint.js"></script>
 
     <script src="src/spaceNeuron.js"></script> 
     <script src="src/controller.js"></script>
     <script src="src/controllers/edit-controller.js"></script>
     <script src="src/controllers/view-controller.js"></script>
-    <script src="src/dijkstra.js"></script>
+    <script src="src/main.js"></script>
     <script src="src/editor.js"></script>
 
-    <!--Скрипт для загрузки поключённых файлов-->
+    <!--Скрипт для загрузки файлов-->
     <script>
       const selectFile = document.getElementById('select-file');
       const fileList = { neurons_1, neurons_2 };

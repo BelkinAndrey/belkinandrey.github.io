@@ -38,6 +38,9 @@ const inpModulationLeak = document.getElementById('modulation-leak-input');
 const inpKey = document.getElementById('key-input');
 const inpId = document.getElementById('id-input');
 
+const switchVisSpike = document.getElementById('VisSpike');
+let VisSpike = true;
+
 const inputFields = document.querySelectorAll('input.input-field[type="number"]');
 
 
@@ -595,25 +598,32 @@ function tactRender() {
     node.attr('body/fill', getColor('#383838', '#ffff00', fireNode[index][1]/100));
   });
 
-
-  /*const links = graph.getLinks();
-  links.forEach(link => {
-    while (link.hasLabels()) {
-      link.removeLabel();
-    }
-  });
-
-  spikes.forEach(element => {
-    const link = graph.getCell(space.links[element[2]].id);
-    link.appendLabel({
-      position: element[1]/element[0],
-      attrs: {
-          text: { text: '1', fontSize: 2, fill: '#FFFF00' },
-          rect: { rx: 4, ry: 4, fill: '#FFFF00', stroke: '#FFFF00', strokeWidth: 5 }
-      },
+  ////////////////Spiks Visual////////////////////
+  if (VisSpike){
+    const links = graph.getLinks();
+    links.forEach(link => {
+      while (link.hasLabels()) {
+        link.removeLabel();
+      }
     });
-  });*/
-  renderId = setTimeout(tactRender, 100);
+
+    spikes.forEach((element, index) => {
+      for (let i = 0; i < 32; i++) {
+        if (element[i] > 1) {
+          const link = graph.getCell(space.links[index].id);
+          link.appendLabel({
+            position: element[i]/linksData[index][2],
+            attrs: {
+              text: { text: '1', fontSize: 2, fill: '#FFFF00' },
+              rect: { rx: 4, ry: 4, fill: '#FFFF00', stroke: '#FFFF00', strokeWidth: 5 }
+            },
+          });
+        };
+      };
+    });
+  };
+  ////////////////////////////////////////////////
+  renderId = setTimeout(tactRender, 60);
 };
 
 function StartRender() {
@@ -644,6 +654,20 @@ document.addEventListener('keydown', event => {
     arrSensor[0].forEach((key, index) => {
       if (key === event.key) {
         FireSensor(index);
+      }
+    });
+  }
+});
+
+switchVisSpike.addEventListener("change", function() {
+  if (this.checked) {
+    VisSpike = true;
+  } else {
+    VisSpike = false;
+    const links = graph.getLinks();
+    links.forEach(link => {
+      while (link.hasLabels()) {
+        link.removeLabel();
       }
     });
   }
