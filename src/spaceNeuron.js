@@ -71,7 +71,8 @@ var linkEnd;
 var MaxInputLink = 0;
 var NeuronInpIndex;
 
-const gpu = new GPU();
+
+//const gpu = new GPU.GPU();
 var kernelFireNode;
 var kernelLinkStart;
 var kernelSpikes;
