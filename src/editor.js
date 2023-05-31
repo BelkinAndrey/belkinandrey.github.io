@@ -43,6 +43,10 @@ let VisSpike = true;
 
 const inputFields = document.querySelectorAll('input.input-field[type="number"]');
 
+const labelLevel = document.getElementById('level-output');
+const labelThreshold = document.getElementById('threshold-output');
+const labelRest = document.getElementById('rest-time-output');
+
 
 let isResizingLeft = false;
 let isResizingRight = false;
@@ -591,33 +595,48 @@ function hexToRGB(hex) {
 }
 
 var renderId;
+var tokens = [];
+
 
 function tactRender() {
   fireNode.forEach((element, index) => {
     const node = graph.getCell(space.nodes[index].id);
-    node.attr('body/fill', getColor('#383838', '#ffff00', fireNode[index][1]/100));
+    node.attr('body/fill', getColor('#383838', '#ffff00', fireNode[index][0]/100));
   });
+
+  if (selectStart) {
+    const NodeSpace = space.nodes.find(N => N.id === selectStart.model.id);
+    if (NodeSpace.type === 1) {
+      let index = space.nodes.indexOf(NodeSpace);
+      labelLevel.textContent = fireNode[index][1];
+      labelThreshold.textContent = fireNode[index][2].toFixed(2);
+      labelRest.textContent = fireNode[index][3];
+    };
+  } else {
+    labelLevel.textContent = '_';
+    labelThreshold.textContent = '_';
+    labelRest.textContent = '_';
+  };
 
   ////////////////Spiks Visual////////////////////
   if (VisSpike){
-    const links = graph.getLinks();
-    links.forEach(link => {
-      while (link.hasLabels()) {
-        link.removeLabel();
-      }
-    });
+
+
+    for (let i = 0; i < tokens.length; i++) tokens[i].remove();
+    tokens.slice(0);
+
+    
 
     spikes.forEach((element, index) => {
       for (let i = 0; i < 32; i++) {
         if (element[i] > 1) {
           const link = graph.getCell(space.links[index].id);
-          link.appendLabel({
-            position: element[i]/linksData[index][2],
-            attrs: {
-              text: { text: '1', fontSize: 2, fill: '#FFFF00' },
-              rect: { rx: 4, ry: 4, fill: '#FFFF00', stroke: '#FFFF00', strokeWidth: 5 }
-            },
-          });
+          var linkView = paper.findViewByModel(link);
+          const point = linkView.getPointAtRatio(element[i]/linksData[index][2]);
+          var token = V('circle', { r: 3, fill: '#ffff00' });
+          token.translate(point.x, point.y);
+          V(paper.cells).append(token);
+          tokens.push(token);
         };
       };
     });
@@ -639,12 +658,8 @@ function StopRender() {
   });
 
 
-  const links = graph.getLinks();
-  links.forEach(link => {
-    while (link.hasLabels()) {
-      link.removeLabel();
-    }
-  });
+  for (let i = 0; i < tokens.length; i++) tokens[i].remove();
+  tokens.slice(0);
 
 };
 

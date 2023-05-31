@@ -12,9 +12,9 @@ const NeuronDefault = {
     thresholdMax: 100.0,
     thresholdMin: 0.0,
     levelMax: 200.0,
-    levelMin: 0.0,
+    levelMin: -200.0,
     levelLeak: 1.0,
-    refractoryPeriod: 0,
+    refractoryPeriod: 5,
     modulationLeak: 0.1,
 };
 
@@ -64,7 +64,6 @@ var fireNode = [];
 var arrSensor = [];
 var linksData = [];
 var neuronData = [];
-var neuronState = [];
 var linkStart;
 var spikes;
 var linkEnd;
@@ -81,9 +80,9 @@ var kernelLinkEnd;
 var kernelActionNode;
 
 
+
+
 function initialization() {
-    fireNode = Array.from({ length: space.nodes.length }, () => Array(2).fill(0));
-    
     const filterSensor = space.nodes.filter(item => item.type === 3);
     arrSensor = [
         filterSensor.map(item => item.setting.key),           //Значение клаыиши
@@ -112,12 +111,14 @@ function initialization() {
         item[8] = item[0] == 1 ? space.nodes[index].setting.modulationLeak : 0;
     });
 
-    neuronState = Array.from({length: space.nodes.length}, () => Array(3).fill(0));
-    neuronState.forEach((item, index) => {
-        item[0] = 0;
-        item[1] = neuronData[index][1];
-        item[2] = 0;
+    fireNode = Array.from({ length: space.nodes.length }, () => Array(4).fill(0));
+    fireNode.forEach((item, index) => {
+        item[0] = 0;                    //Fire/postFire
+        item[1] = 0;                    //Level
+        item[2] = neuronData[index][1]; //start threshold
+        item[3] = 0;                    //refractoryPeriod
     });
+
 
     linkStart = Array.from({ length: space.links.length}, () => Array(2).fill(0));
     spikes = Array.from({length: space.links.length}, () => Array(32).fill(-1));
@@ -147,7 +148,7 @@ function initialization() {
         let index = link[this.thread.x][0];
         let res1 = node[index][0]; 
         let res2 = linkstart[this.thread.x][1];
-        if (res1 > 0) res2 = linkstart[this.thread.x][1] + 1;
+        if (res1 == 100) res2++;
         if (res2 > 31) res2 = 0;
         return [res1, res2];
     }).setOutput([linksData.length]);
@@ -157,7 +158,7 @@ function initialization() {
         if (res == -2) res = -1;
         if (res >= 0) res++;
         if (res > links[this.thread.y][2]) res = -2;
-        if (linkStart[this.thread.y][0] == 1) {
+        if ((linkStart[this.thread.y][0] == 100) && (res == -1)) {
            if (linkStart[this.thread.y][1] == this.thread.x) res = 0 
         }; 
         return res;
@@ -177,36 +178,73 @@ function initialization() {
         return [res1, res2, res3];
     }).setOutput([linksData.length]);
 
-    kernelActionNode = gpu.createKernel(function(InpIndex, linkEnd, node){
-        let res1 = node[this.thread.x][0];
-        let res2 = node[this.thread.x][1];
+    kernelActionNode = gpu.createKernel(function(InpIndex, linkEnd, fireNode, neuronData){
+        let res0 = fireNode[this.thread.x][0];
+        let res1 = fireNode[this.thread.x][1];
+        let res2 = fireNode[this.thread.x][2];
+        let res3 = fireNode[this.thread.x][3];
+
+
+        let dir = 0;
+        let mod = 0;
+        let ele = 0;
 
         for (let i = 0; i < this.constants.max; i++){
             const index = InpIndex[this.thread.x][i];
             if  (index !== -1)  {
-                if (linkEnd[index][0] > 0) {
-                    res1 = 1;
-                    res2 = 100;
-                };
-                //if (linkEnd[index][1] > 0) {
-                //    res1 = 1;
-                //    res2 = 100;
-                //};
-                if (linkEnd[index][2] == 1) {
-                    res1 = 1;
-                    res2 = 100;
-                };
+                dir += linkEnd[index][0];
+                mod += linkEnd[index][1];
+                if (linkEnd[index][2] == 1) ele = 1;
             };
         };
-        return [res1, res2];
+
+        res1 += dir;
+        res1 = Math.max(Math.min(res1, neuronData[this.thread.x][4]), neuronData[this.thread.x][5]);
+
+        res2 += mod;
+        res2 = Math.max(Math.min(res2, neuronData[this.thread.x][2]), neuronData[this.thread.x][3]);
+
+        if (res3 == 0) {
+            if ((res1 > res2) || (ele == 1)) {
+                res0 = 100;
+                res3 = neuronData[this.thread.x][7];
+            }
+        };
+
+        return [res0, res1, res2, res3];
     }).setOutput([fireNode.length]).setConstants({ max: MaxInputLink });
 
-    kernelFireNode = gpu.createKernel(function(node) {
-        let res = 0;
-        if (node[this.thread.x][1] > 0) res = node[this.thread.x][1] - 1;
-        return [0, res];
-    }).setOutput([fireNode.length]);
+    kernelFireNode = gpu.createKernel(function(node, neuronData) {
+        let res0 = node[this.thread.x][0];
+        let res1 = node[this.thread.x][1];
+        let res2 = node[this.thread.x][2];
+        let res3 = node[this.thread.x][3];
 
+        if (res0 > 0) res0--;
+
+        const leak = neuronData[this.thread.x][6];
+        if (res1 > 0) {
+            res1 -= leak;
+            if (res1 < 0) res1 = 0;
+        } else {
+            res1 += leak;
+            if (res1 > 0) res1 = 0;
+        };
+
+        const tleak = neuronData[this.thread.x][8];
+        const thtre = neuronData[this.thread.x][1];
+        if (res2 > thtre) {
+            res2 -= tleak;
+            if (res2 < thtre) res2 = thtre;
+        } else {
+            res2 += tleak;
+            if (res2 > thtre) res2 = thtre;
+        };
+
+        if (res3 > 0) res3--;
+
+        return [res0, res1, res2, res3];
+    }).setOutput([fireNode.length]);
 
 
     /////////////////////END GPU////////////////////////
@@ -220,9 +258,8 @@ function tact() {
     linkStart = kernelLinkStart(linksData, fireNode, linkStart);
     spikes = kernelSpikes(spikes, linkStart, linksData);
     linkEnd = kernelLinkEnd(spikes, linksData);
-    fireNode = kernelFireNode(fireNode);
-    fireNode = kernelActionNode(NeuronInpIndex, linkEnd, fireNode);
-
+    fireNode = kernelFireNode(fireNode, neuronData);
+    fireNode = kernelActionNode(NeuronInpIndex, linkEnd, fireNode, neuronData);
     
 };
 
@@ -241,8 +278,7 @@ function StopSpace() {
 };
 
 function FireSensor(index) {
-    if (fireNode[arrSensor[1][index]][1] < 50) {
-        fireNode[arrSensor[1][index]][1] = 100;
-        fireNode[arrSensor[1][index]][0] = 1;
+    if (fireNode[arrSensor[1][index]][0] < 50) {
+        fireNode[arrSensor[1][index]][0] = 100;
     }; 
 };
