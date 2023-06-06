@@ -243,6 +243,10 @@ function createLink(s, t, color=outlineColor) {
                 reFreshInspector();
                 unSelect(null, {button : 0});
                 localStorage.setItem("space", JSON.stringify(space));
+
+                StopSpace();
+                StopRender();
+                btnPlay.children[0].src = "img/play.png"; 
             } })
         ]
     }));
@@ -280,20 +284,38 @@ function StartEditor() {
     for(const element of graph.getElements()) {
         element.attr('body/cursor', 'move'); 
     }
-
-    const savedPosition = JSON.parse(localStorage.getItem('paperPosition'));
-    const savedScale = JSON.parse(localStorage.getItem('paperScale'));
-    if (savedPosition && savedScale) {
-        paper.translate(savedPosition.tx, savedPosition.ty);
-        paper.scale(savedScale.sx, savedScale.sy);
-    }
+    
+    showAll();
 
     editController.startListening();
     viewController.startListening();
+
 }
 
-// UI.
-// ------------
+function showAll (){
+
+    paper.scale(1, 1);
+    const border = graph.getBBox();
+    let area = paper.getArea();
+
+    if (border == null) return;
+
+
+    const scaleX = area.width / border.width;
+    const scaleY = area.height / border.height;
+    let scale = Math.min(scaleX, scaleY) * 0.95;
+    scale = Math.min(Math.max(scale, 0.1), 3);
+
+    paper.scale(scale, scale);
+    area = paper.getArea();
+
+
+    const offsetX = (area.width - border.width) / 2;
+    const offsetY = (area.height - border.height) / 2;
+
+
+    paper.translate((-border.x + offsetX) * scale, (-border.y + offsetY) * scale);
+};
 
 const styles = V.createSVGStyle(`
     .joint-element .${pathMemberClassName} {

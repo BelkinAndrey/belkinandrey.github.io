@@ -41,11 +41,13 @@ const inpId = document.getElementById('id-input');
 const switchVisSpike = document.getElementById('VisSpike');
 let VisSpike = true;
 
-const inputFields = document.querySelectorAll('input.input-field[type="number"]');
+const inputFields = document.querySelectorAll('input.input-field[type="number"]');  
 
 const labelLevel = document.getElementById('level-output');
 const labelThreshold = document.getElementById('threshold-output');
 const labelRest = document.getElementById('rest-time-output');
+
+const openWin = document.getElementById('open-windows');
 
 
 let isResizingLeft = false;
@@ -419,6 +421,10 @@ function ApplaySettingLink() {
       const color = getColorLink(linkSpace);
       link.attr({ 'line': { stroke: color, targetMarker: { fill: color, stroke: color, } } });
       localStorage.setItem("space", JSON.stringify(space));
+
+      StopSpace();
+      StopRender();
+      btnPlay.children[0].src = "img/play.png"; 
     }
   }
 };
@@ -439,6 +445,10 @@ function ApplaySettingNode() {
         node.attr('label/font-size', sizeFront);
         node.attr('label/text', NodeSpace.setting.key);
       };
+
+      StopSpace();
+      StopRender();
+      btnPlay.children[0].src = "img/play.png"; 
     }
   }
 };
@@ -538,7 +548,7 @@ inputFields.forEach(inputField => {
       getLinkSettingEditor();
       getNodeSettingEditor();
       ApplaySettingLink();
-      ApplaySettingNode();
+      ApplaySettingNode(); 
     }
   });
 });
@@ -595,6 +605,7 @@ function hexToRGB(hex) {
 }
 
 var renderId;
+var tickinId;
 var tokens = [];
 
 
@@ -608,7 +619,7 @@ function tactRender() {
     const NodeSpace = space.nodes.find(N => N.id === selectStart.model.id);
     if (NodeSpace.type === 1) {
       let index = space.nodes.indexOf(NodeSpace);
-      labelLevel.textContent = fireNode[index][1];
+      labelLevel.textContent = fireNode[index][1].toFixed(2);;
       labelThreshold.textContent = fireNode[index][2].toFixed(2);
       labelRest.textContent = fireNode[index][3];
     };
@@ -645,12 +656,57 @@ function tactRender() {
   renderId = setTimeout(tactRender, 60);
 };
 
+let actuators = {};
+let sensors = {};
+
+function inputOutput (){
+
+  for (let node in actuators) {
+    actuators[node].value = fireNode[actuators[node].index][0];
+  };
+
+  localStorage.setItem("actuators", JSON.stringify(actuators));
+
+  let sensors = JSON.parse(localStorage.getItem('sensors'));
+  if (sensors === null) return;
+  
+  for (let node in sensors) {
+    const index = arrSensor[0].indexOf(node)
+    if (index === -1) continue;
+    if (sensors[node] === 0) continue;
+    FireSensor(index);
+    sensors[node] = 0;   
+    localStorage.setItem("sensors", JSON.stringify(sensors)); 
+  };
+
+};
+
 function StartRender() {
   renderId = setTimeout(tactRender, 100);
+  tickinId = setInterval(inputOutput, 21);
+
+  actuators = {};
+  sensors = {};
+
+  space.nodes.forEach((node, index) => {
+    if (node.type === 2) {
+      const id = node.setting.id;
+      if (id !== '') {
+        actuators[id] = {value: 0, index: index};
+      };
+    };
+  });
+
+  arrSensor[0].forEach(key => {
+    sensors[key] = 0;
+  });
+
+  localStorage.setItem("sensors", JSON.stringify(sensors));
 };
 
 function StopRender() {
   clearInterval(renderId);
+  clearInterval(tickinId);
   
   const nodes = graph.getElements();
   nodes.forEach(node => {
@@ -660,6 +716,10 @@ function StopRender() {
 
   for (let i = 0; i < tokens.length; i++) tokens[i].remove();
   tokens.slice(0);
+
+  labelLevel.textContent = '_';
+  labelThreshold.textContent = '_';
+  labelRest.textContent = '_';
 
 };
 
@@ -679,11 +739,17 @@ switchVisSpike.addEventListener("change", function() {
     VisSpike = true;
   } else {
     VisSpike = false;
-    const links = graph.getLinks();
-    links.forEach(link => {
-      while (link.hasLabels()) {
-        link.removeLabel();
-      }
-    });
+    for (let i = 0; i < tokens.length; i++) tokens[i].remove();
+    tokens.slice(0);
   }
+});
+
+
+openWin.addEventListener ('change', (event) => {
+
+  const nameValue = event.target.value;
+  if (nameValue === "null") return;
+  
+  window.open('./win/'+ nameValue + '.html', 'new_tab');
+  event.target.selectedIndex = 0;
 });

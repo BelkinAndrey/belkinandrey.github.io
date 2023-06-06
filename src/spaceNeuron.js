@@ -104,9 +104,9 @@ function initialization() {
         item[1] = item[0] == 1 ? space.nodes[index].setting.threshold : 0;
         item[2] = item[0] == 1 ? space.nodes[index].setting.thresholdMax : 0;
         item[3] = item[0] == 1 ? space.nodes[index].setting.thresholdMin : 0;
-        item[4] = item[0] == 1 ? space.nodes[index].setting.levelMax : 0;
+        item[4] = item[0] == 1 ? space.nodes[index].setting.levelMax : 0.1;
         item[5] = item[0] == 1 ? space.nodes[index].setting.levelMin : 0;
-        item[6] = item[0] == 1 ? space.nodes[index].setting.levelLeak : 0;
+        item[6] = item[0] == 1 ? space.nodes[index].setting.levelLeak : 1;
         item[7] = item[0] == 1 ? space.nodes[index].setting.refractoryPeriod : 0;
         item[8] = item[0] == 1 ? space.nodes[index].setting.modulationLeak : 0;
     });
@@ -278,7 +278,7 @@ function StopSpace() {
 };
 
 function FireSensor(index) {
-    if (fireNode[arrSensor[1][index]][0] < 50) {
+    if (fireNode[arrSensor[1][index]][0] < 80) {
         fireNode[arrSensor[1][index]][0] = 100;
     }; 
 };

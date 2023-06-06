@@ -5,7 +5,7 @@
     <title>FLUX Simple</title>
     <link rel="stylesheet" type="text/css" href="css/editor.css" />
     <link rel="stylesheet" type="text/css" href="build/joint.css">
-    <script src="./data/neurons_1.json"></script>
+    <script src="./data/neurons_for_test_1.json"></script>
     <script src="./data/neurons_2.json"></script>
 </head>
 <body>
@@ -40,8 +40,12 @@
         </button>
         <select id="select-file">
           <option value="null" disabled selected>Load..</option>
-          <option value="neurons_1">neurons_1</option>
+          <option value="neurons_for_test_1">neurons_for_test_1</option>
           <option value="neurons_2">neurons_2</option>
+        </select>
+        <select id="open-windows">
+          <option value="null" disabled selected>Open window..</option>
+          <option value="test_1">Test_1</option>
         </select>
       </div>
     </div>
@@ -246,7 +250,7 @@
           <span class="slider"></span>
         </label>
       </div>
-      <div style="margin-right: 10px;">version: 0.2023.05.20</div>
+      <div style="margin-right: 10px;">version: 0.2023.06.02</div>
     </div>
 
 
@@ -267,7 +271,7 @@
     <!--Скрипт для загрузки файлов-->
     <script>
       const selectFile = document.getElementById('select-file');
-      const fileList = { neurons_1, neurons_2 };
+      const fileList = { neurons_for_test_1, neurons_2 };
       selectFile.addEventListener('change', (event) => {
         const nameValue = event.target.value;
         RemoveAll();
@@ -280,6 +284,11 @@
         selectFile.children[0].innerHTML = nameValue;
         radioNode[nodeType - 1].checked = true;
         changeRadioNode();
+
+        showAll();
+        StopSpace();
+        StopRender();
+        btnPlay.children[0].src = "img/play.png"; 
       });
     </script>
 </body>

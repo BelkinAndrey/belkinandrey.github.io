@@ -32,9 +32,6 @@ class EditController extends Controller {
                 panOffset.x = -x*zoomLevel+evt.offsetX;
                 panOffset.y = -y*zoomLevel+evt.offsetY;
                 paper.translate(panOffset.x , panOffset.y );
-
-                localStorage.setItem('paperPosition', JSON.stringify(paper.translate()));
-                localStorage.setItem('paperScale', JSON.stringify(paper.scale()));
             }
         });
 
@@ -46,9 +43,6 @@ class EditController extends Controller {
                 panOffset.x = -x*zoomLevel+evt.offsetX;
                 panOffset.y = -y*zoomLevel+evt.offsetY;
                 paper.translate(panOffset.x , panOffset.y );
-
-                localStorage.setItem('paperPosition', JSON.stringify(paper.translate()));
-                localStorage.setItem('paperScale', JSON.stringify(paper.scale()));
             }
         });
     
@@ -79,7 +73,6 @@ class EditController extends Controller {
                 panOffset.y += dy;
                 paper.translate(panOffset.x, panOffset.y);
                 panStart = { x: evt.clientX, y: evt.clientY };
-                localStorage.setItem('paperPosition', JSON.stringify(paper.translate()));
             }
         });
     }
@@ -115,6 +108,10 @@ function replaceLink({ createLink }, link, _collection, opt) {
             createLink(sourceId, targetId, getColorLink(l));
             localStorage.setItem("space", JSON.stringify(space));
             reFreshInspector();
+
+            StopSpace();
+            StopRender();
+            btnPlay.children[0].src = "img/play.png"; 
         }
     }
     refreshLink();
@@ -130,6 +127,10 @@ function removeElement({}, elementView) {
     }
     localStorage.setItem("space", JSON.stringify(space));
     reFreshInspector();
+
+    StopSpace();
+    StopRender();
+    btnPlay.children[0].src = "img/play.png"; 
 }
 
 function addElement({ createNode, size }, _evt, x, y) {
@@ -139,6 +140,10 @@ function addElement({ createNode, size }, _evt, x, y) {
         node.position(x - size / 2, y - size / 2);
         localStorage.setItem("space", JSON.stringify(space));
         reFreshInspector();
+
+        StopSpace();
+        StopRender();
+        btnPlay.children[0].src = "img/play.png"; 
 }
 
 function changePosition (_context, element) {

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test</title>
+
+    <style type="text/css">
+		.container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			margin-top: 50px;
+		}
+
+		.box {
+			display: flex;
+            flex-direction: column;
+            justify-content: center; /* выравнивание по центру */
+            align-items: center;
+            border: 1px solid gray;
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 400px;
+            gap: 10px; /* добавляем промежуток между строками */
+		}
+
+		h2 {
+			text-align: center;
+			margin-bottom: 10px;
+		}
+
+		.label {
+			display: inline-block;
+			width: 25px;
+			margin-right: 10px;
+		}
+
+		.input {
+			height: 25px;
+			padding: 5px;
+			margin-right: 10px;
+			border-radius: 4px;
+			border: 1px solid #ccc;
+		}
+
+		.indicator {
+			display: inline-block;
+			width: 25px;
+			height: 25px;
+			border-radius: 50%;
+			margin-right: 10px;
+            vertical-align: middle; /* Add this line */
+		}
+
+		.button {
+			height: 25px;
+            width: 25px;
+			vertical-align: middle;
+			margin-right: 10px;
+			border-radius: 4px;
+			border: 1px solid #ccc;
+			cursor: pointer;
+            background-color: #a1a1a1;
+		}
+
+        .button:active {
+             background-color: red;
+        }
+        
+	</style>
+</head>
+<body>
+    <div class="container">
+		<div class="box">
+			<h2>Actuators</h2>
+			<div class="row" id = "actuator">
+				<label class="label">id :</label>
+				<input class="input" type="text" value="1">
+				<div class="indicator" style="background-color: #a1a1a1;"></div>
+			</div>
+			<div class="row" id = "actuator">
+				<label class="label">id :</label>
+				<input class="input" type="text" value="2">
+				<div class="indicator" style="background-color: #a1a1a1;"></div>
+			</div>
+            <div class="row" id = "actuator">
+				<label class="label">id :</label>
+				<input class="input" type="text" value="3">
+				<div class="indicator" style="background-color: #a1a1a1;"></div>
+			</div>
+            <div class="row" id = "actuator">
+				<label class="label">id :</label>
+				<input class="input" type="text" value="4">
+				<div class="indicator" style="background-color: #a1a1a1;"></div>
+			</div>
+            <div class="row" id = "actuator">
+				<label class="label">id :</label>
+				<input class="input" type="text" value="5">
+				<div class="indicator" style="background-color: #a1a1a1;"></div>
+			</div>
+		</div>
+		<div class="box">
+			<h2>Sensors</h2>
+			<div class="row" id = "sensor">
+				<label class="label">id :</label>
+				<input class="input" type="text" value="q">
+				<button class="button" ></button>
+			</div>
+			<div class="row" id = "sensor">
+				<label class="label">id :</label>
+				<input class="input" type="text" value="w">
+				<button class="button" ></button>
+			</div>
+            <div class="row" id = "sensor">
+				<label class="label">id :</label>
+				<input class="input" type="text" value="e">
+				<button class="button" ></button>
+			</div>
+            <div class="row" id = "sensor">
+				<label class="label">id :</label>
+				<input class="input" type="text" value="r">
+				<button class="button" ></button>
+			</div>
+            <div class="row" id = "sensor">
+				<label class="label">id :</label>
+				<input class="input" type="text" value="t">
+				<button class="button" ></button>
+			</div>
+		</div>
+	</div>
+    <script>
+        const actuators = document.querySelectorAll('div[id="actuator"]');
+        const sensors = document.querySelectorAll('div[id="sensor"]');
+
+
+        sensors.forEach(sensor => {
+
+            sensor.querySelector(".button").addEventListener('mousedown', () =>{
+                const id = sensor.querySelector(".input").value;
+                if (id === '') return;
+                let sensordata = JSON.parse(localStorage.getItem('sensors'));
+                if (sensordata === null) return;
+                sensordata[id] = 1;
+                localStorage.setItem("sensors", JSON.stringify(sensordata));
+            })
+        });
+
+
+        function updata () {
+            const data = JSON.parse(localStorage.getItem('actuators'));
+            if (data === null) return;
+            for (let i = 0; i < actuators.length; i++) {
+                const id = actuators[i].querySelector('.input').value;
+                if (data[id] === undefined) return;
+                const val = data[id].value;
+                if (val > 50) actuators[i].querySelector('.indicator').style.backgroundColor = "#FF0000";
+                else actuators[i].querySelector('.indicator').style.backgroundColor = "#a1a1a1";
+            };
+        };
+
+        const IntervalId = setInterval(updata, 21);
+    </script>
+</body>
+</html>
