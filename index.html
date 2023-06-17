@@ -6,7 +6,9 @@
     <link rel="stylesheet" type="text/css" href="css/editor.css" />
     <link rel="stylesheet" type="text/css" href="build/joint.css">
     <script src="./data/neurons_for_test_1.json"></script>
+    <script src="./data/rotation.json"></script>
     <script src="./data/neurons_2.json"></script>
+    <script src="./data/neurons_3.json"></script>
 </head>
 <body>
     
@@ -42,6 +44,8 @@
           <option value="null" disabled selected>Load..</option>
           <option value="neurons_for_test_1">neurons_for_test_1</option>
           <option value="neurons_2">neurons_2</option>
+          <option value="neurons_3">neurons_3</option>
+          <option value="rotation">rotation</option>
         </select>
         <select id="open-windows">
           <option value="null" disabled selected>Open window..</option>
@@ -98,6 +102,9 @@
             </label>
           </div>
           <div>
+            <div class="input-container" data-value="4">
+              <label class="input-label" style="color: red;">Не работает</label>
+            </div>
             <div class="input-container open" data-value="1">
               <label class="input-label">level:</label>
               <label class="output-label" id="level-output">_</label>
@@ -120,7 +127,7 @@
             </div>
             <div class="input-container open" data-value="1">
               <label class="input-label">threshold-min:</label>
-              <input type="number" id="threshold-min-input" class="input-field" placeholder="0" value="0" min="0" pattern="[0-9]+">
+              <input type="number" id="threshold-min-input" class="input-field" placeholder="0" value="0" pattern="[0-9]+">
             </div>
             <div class="input-container open" data-value="1">
               <label class="input-label">level-max:</label>
@@ -192,6 +199,9 @@
           </label>
         </div>
         <div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label" style="color: red;">Не работает</label>
+          </div>
           <div class="input-container-link" data-value="4">
             <label class="input-label">weight:</label>
             <label class="output-label" id="weight-output">_</label>
@@ -272,7 +282,7 @@
     <!--Скрипт для загрузки файлов-->
     <script>
       const selectFile = document.getElementById('select-file');
-      const fileList = { neurons_for_test_1, neurons_2 };
+      const fileList = { neurons_for_test_1, neurons_2, neurons_3, rotation };
       selectFile.addEventListener('change', (event) => {
         const nameValue = event.target.value;
         RemoveAll();

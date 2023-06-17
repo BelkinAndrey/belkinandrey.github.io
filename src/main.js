@@ -287,9 +287,6 @@ function StartEditor() {
     
     showAll();
 
-    editController.startListening();
-    viewController.startListening();
-
 }
 
 function showAll (){
@@ -315,6 +312,9 @@ function showAll (){
 
 
     paper.translate((-border.x + offsetX) * scale, (-border.y + offsetY) * scale);
+
+    editController.startListening();
+    viewController.startListening();
 };
 
 const styles = V.createSVGStyle(`
