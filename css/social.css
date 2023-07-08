@@ -1,0 +1,38 @@
+@import url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css);
+.social a {
+    text-align: center;
+    width: 40px;
+    height: 20px;
+    float: left;
+    background: #25232f;
+    border: 1px solid rgb(0, 0, 0);
+    box-shadow: 0 2px 4px rgba(255, 255, 255, 0.2), inset 0 0 50px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    padding: 5px;
+    color: rgb(177, 177, 177);
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
+
+.button-social {
+    display: flex;
+    justify-content: flex-start;
+    font-size: 11px;
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+
+.github a:hover {background: #fdfdfd; color: rgb(0, 0, 0);}
+.youtube a:hover {background: #fdfdfd; color: #c4302b;}
+.vk a:hover {background: #fdfdfd; color: #2787F5;}
+.twitter a:hover {background: #fdfdfd; color: #08a0e9;}
+.telegram a:hover {background: #fdfdfd; color: #0088cc;}
+.medium a:hover {background: #fdfdfd; }
+.medium a:hover svg path {fill: #000000;}
+.medium a svg path {fill: rgb(160, 160, 160);}
+.habr a:hover {background: #fdfdfd; }
+.habr a:hover svg path {fill: #249bd7;}
+.habr a svg path {fill: rgb(160, 160, 160);}
+.flux :hover {background: #fdfdfd; color: rgb(0, 0, 0);}
+.flux a {width: 110px; font-size: 14px; font-weight: bold;}

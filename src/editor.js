@@ -49,6 +49,8 @@ const labelRest = document.getElementById('rest-time-output');
 
 const openWin = document.getElementById('open-windows');
 
+const labelTime = document.getElementById('label-time');
+
 
 let isResizingLeft = false;
 let isResizingRight = false;
@@ -555,29 +557,29 @@ inputFields.forEach(inputField => {
 
 
 function handleKeyDown(event) {
-  event.preventDefault(); // отменяем стандартное поведение браузера
+  event.preventDefault(); 
   const keyInput = document.getElementById("key-input");
-  const key = event.key; // получаем нажатую клавишу
+  const key = event.key; 
   if (key === "Enter") {
     keyInput.blur();
     return false;
   }
-  keyInput.value = key; // записываем значение в поле ввода
+  keyInput.value = key; 
 
   getNodeSettingEditor();
   ApplaySettingNode();
 
-  return false; // отменяем дальнейшую обработку события
+  return false; 
 };
 
 
-btnPlay.addEventListener('click', () =>{
+btnPlay.addEventListener('click',  async () =>{
   if (playing){
     StopSpace();
     StopRender();
     btnPlay.children[0].src = "img/play.png"; 
   } else {
-    StartSpace();
+    await StartSpace();
     StartRender();
     btnPlay.children[0].src = "img/stop.png";
   }
@@ -609,19 +611,26 @@ var tickinId;
 var tokens = [];
 
 
-function tactRender() {
-  fireNode.forEach((element, index) => {
-    const node = graph.getCell(space.nodes[index].id);
-    node.attr('body/fill', getColor('#383838', '#ffff00', fireNode[index][0]/100));
+async function tactRender() {
+
+  if ((fireNode == undefined) || (renderspike == undefined)) {
+    renderId = setTimeout(tactRender, 60);
+    return;
+  }
+
+
+  space.nodes.forEach((element, index) => {
+    const node = graph.getCell(element.id);
+    node.attr('body/fill', getColor('#383838', '#ffff00', fireNode[index * 4]/100));
   });
 
   if (selectStart) {
     const NodeSpace = space.nodes.find(N => N.id === selectStart.model.id);
     if (NodeSpace.type === 1) {
       let index = space.nodes.indexOf(NodeSpace);
-      labelLevel.textContent = fireNode[index][1].toFixed(2);;
-      labelThreshold.textContent = fireNode[index][2].toFixed(2);
-      labelRest.textContent = fireNode[index][3];
+      labelLevel.textContent = fireNode[index * 4 + 1].toFixed(2);;
+      labelThreshold.textContent = fireNode[index * 4 + 2].toFixed(2);
+      labelRest.textContent = fireNode[index * 4 + 3];
     };
   } else {
     labelLevel.textContent = '_';
@@ -629,29 +638,30 @@ function tactRender() {
     labelRest.textContent = '_';
   };
 
+  labelTime.textContent = 'Time tick: ' + timeDiff + ' mc';
+
   ////////////////Spiks Visual////////////////////
   if (VisSpike){
-
 
     for (let i = 0; i < tokens.length; i++) tokens[i].remove();
     tokens.slice(0);
 
-    
-
-    spikes.forEach((element, index) => {
-      for (let i = 0; i < 32; i++) {
-        if (element[i] > 1) {
-          const link = graph.getCell(space.links[index].id);
+    renderspike.forEach((element, index) => {
+      if (index % 32 == 0) return;
+      const index_link = Math.floor(index / 32);   
+        if ((element > 1) && (index_link < space.links.length)) {
+          const link = graph.getCell(space.links[index_link].id);
           var linkView = paper.findViewByModel(link);
-          const point = linkView.getPointAtRatio(element[i]/linksData[index][2]);
+          const point = linkView.getPointAtRatio(1 - element/arrLinkData[index_link][2]);
           var token = V('circle', { r: 3, fill: '#ffff00' });
           token.translate(point.x, point.y);
           V(paper.cells).append(token);
           tokens.push(token);
         };
-      };
     });
   };
+
+
   ////////////////////////////////////////////////
   renderId = setTimeout(tactRender, 60);
 };
@@ -661,8 +671,10 @@ let sensors = {};
 
 function inputOutput (){
 
+  if (fireNode.length == 0) return;
+
   for (let node in actuators) {
-    actuators[node].value = fireNode[actuators[node].index][0];
+    actuators[node].value = fireNode[actuators[node].index * 4];
   };
 
   localStorage.setItem("actuators", JSON.stringify(actuators));
@@ -721,6 +733,8 @@ function StopRender() {
   labelThreshold.textContent = '_';
   labelRest.textContent = '_';
 
+  labelTime.textContent = 'Time tick: -- mc';
+
 };
 
 
@@ -753,4 +767,3 @@ openWin.addEventListener ('change', (event) => {
   window.open('./win/'+ nameValue + '.html', 'new_tab');
   event.target.selectedIndex = 0;
 });
-

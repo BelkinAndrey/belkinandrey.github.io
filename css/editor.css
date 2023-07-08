@@ -376,3 +376,7 @@ input:checked + .slider:before {
   margin-left: 5px;
   font-size: 12px;
 }
+
+.button-bottom div{
+  margin-left: 20px;
+}

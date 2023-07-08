@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8"/>
     <title>cogFlux</title>
-    <link rel="stylesheet" type="text/css" href="css/editor.css" />
-    <link rel="stylesheet" type="text/css" href="build/joint.css">
+    <link rel="stylesheet" type="text/css" href="css/editor.css">
+    <link rel="stylesheet" type="text/css" href="css/social.css">
+    <link rel="stylesheet" type="text/css" href="joint/joint.css">
     <script src="./data/neurons_for_test_1.json"></script>
     <script src="./data/rotation.json"></script>
     <script src="./data/neurons_2.json"></script>
@@ -103,7 +104,7 @@
           </div>
           <div>
             <div class="input-container" data-value="4">
-              <label class="input-label" style="color: red;">Не работает</label>
+              <label class="input-label" style="color: red;">does not work!</label>
             </div>
             <div class="input-container open" data-value="1">
               <label class="input-label">level:</label>
@@ -200,7 +201,7 @@
         </div>
         <div>
           <div class="input-container-link" data-value="4">
-            <label class="input-label" style="color: red;">Не работает</label>
+            <label class="input-label" style="color: red;">does not work!</label>
           </div>
           <div class="input-container-link" data-value="4">
             <label class="input-label">weight:</label>
@@ -255,29 +256,55 @@
     </div>
     <div class="bottom"> 
       <div class="button-bottom">
+        <div id="label-time" style="width: 150px; word-wrap: break-word; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Time tick: -- mc</div>
         <div>Spike Visualization:</div>
         <label class="chec">
           <input type="checkbox" id="VisSpike" checked>
           <span class="slider"></span>
         </label>
       </div>
-      <div style="margin-right: 10px;">version: 0.2023.06.02</div>
+      <div class="button-social">
+      <div class="social github">
+        <a href="https://github.com/BelkinAndrey/belkinandrey.github.io" target="_blank"><i class="fab fa-github fa-2x"></i></a>
+      </div>
+      <div class="social youtube">
+        <a href="https://youtube.com/@it.belkin/videos" target="_blank"><i class="fab fa-youtube fa-2x"></i></a>
+      </div>
+      <div class="social vk">
+        <a href="https://vk.com/club137626673" target="_blank"><i class="fab fa-vk fa-2x"></i></a>    
+      </div>
+      <div class="social twitter">
+        <a href="https://twitter.com/it_belkin" target="_blank"><i class="fab fa-twitter fa-2x"></i></a>
+      </div>
+      <div class="social telegram">
+        <a href="https://telegram.me/neuro_cyber" target="_blank"><i class="fa fa-paper-plane fa-2x"></i></a>
+       </div>
+       <div class="social medium">
+        <a href="https://medium.com/@it.belkin" target="_blank"><svg width="22px" height="22px" viewBox="0 -55 256 256"  preserveAspectRatio="xMidYMid" fill="#ffffff" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M72.2009141,1.42108547e-14 C112.076502,1.42108547e-14 144.399375,32.5485469 144.399375,72.6964154 C144.399375,112.844284 112.074049,145.390378 72.2009141,145.390378 C32.327779,145.390378 0,112.844284 0,72.6964154 C0,32.5485469 32.325326,1.42108547e-14 72.2009141,1.42108547e-14 Z M187.500628,4.25836743 C207.438422,4.25836743 223.601085,34.8960455 223.601085,72.6964154 L223.603538,72.6964154 C223.603538,110.486973 207.440875,141.134463 187.503081,141.134463 C167.565287,141.134463 151.402624,110.486973 151.402624,72.6964154 C151.402624,34.9058574 167.562834,4.25836743 187.500628,4.25836743 Z M243.303393,11.3867175 C250.314,11.3867175 256,38.835526 256,72.6964154 C256,106.547493 250.316453,134.006113 243.303393,134.006113 C236.290333,134.006113 230.609239,106.554852 230.609239,72.6964154 C230.609239,38.837979 236.292786,11.3867175 243.303393,11.3867175 Z"> </path> </g> </g></svg></a> 
+       </div>
+       <div class="social habr">
+        <a href="https://habr.com/ru/users/aigame/posts/" target="_blank"><svg width="22px" height="22px" viewBox="0 0 24.00 24.00" role="img" stroke="#000000" stroke-width="0.00024000000000000003"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M0 0v24h24V0zm7.025 4h1.633c1.219 0 1.64.029 1.668.113.019.066.028 1.369.028 2.897l-.008 2.783.476-.422c.657-.581 1.212-.787 2.262-.824.694-.019.973.009 1.46.178 1.06.356 1.81 1.087 2.204 2.166.15.421.17.863.197 4.285l.03 3.824h-3.338v-3.121c0-3.075-.01-3.113-.217-3.488-.29-.497-.609-.722-1.106-.778-.853-.093-1.443.197-1.78.89-.16.32-.179.656-.188 3.356-.01 1.65-.03 3.03-.03 3.067-.008.047-.75.074-1.65.074h-1.64v-7.5z"></path></g></svg></a>
+       </div>
+       <div class="social flux">
+        <a href="https://fluxengine.ai/" target="_blank">fluxengine.ai</a>
+      </div>
+      </div>
+      <div style="margin-right: 10px;">version: 0.2023.07.06</div>
     </div>
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.4.1/backbone.js"></script>
-    <script src="./build/joint.js"></script>
-
-    <script src="./gpu/gpu-browser.min-2.15.0-FIX-GPUX.js"></script>
+    <script src="./joint/joint.js"></script>
 
     <script src="src/spaceNeuron.js"></script> 
     <script src="src/controller.js"></script>
     <script src="src/controllers/edit-controller.js"></script>
     <script src="src/controllers/view-controller.js"></script>
-    <script src="src/main.js"></script>
     <script src="src/editor.js"></script>
+    <script src="src/main.js"></script>
+    
 
     <!--Скрипт для загрузки файлов-->
     <script>

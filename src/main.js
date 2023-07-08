@@ -369,6 +369,7 @@ function StartLoad() {
         createLink(sourceNode, targetNode, getColorLink(link));    
     });
 
+    reFreshInspector();
 }
 
 

@@ -60,225 +60,464 @@ var nodeType = 1;
 var linkSetting = LinkDefault.direct;
 var NodeSetting = NeuronDefault;
 
-var fireNode = [];
-var arrSensor = [];
-var linksData = [];
-var neuronData = [];
-var linkStart;
+///////////////////////////////////////////////////
+
+var arrSensor;
+var arrLinkData;
+var linksData;
+var nodeData;
+var nodeState;
 var spikes;
-var linkEnd;
-var MaxInputLink = 0;
-var NeuronInpIndex;
+var insensor;
+
+var gpuBufferLinksData;
+var gpuBufferNodeData;
+var gpuBufferStateNode;
+var gpuBufferSpikes;
+var gpuBufferInsensor;
+
+var commandEncoder;
+var device;
+
+var computePipelineSpikepass;
+var computePipelineNodepass;
+var bindGroupSpike;
+var bindGroupNode;
+
+var gpuBuefferRenderNode;
+var gpuBuefferRenderSpiks;
+
+var fireNode = [];
+var renderspike;
+
+let loopTimes = 0;
+let startTime;
+var timeDiff;
+
+async function initGPU () {
+  if (!("gpu" in navigator)) {
+    console.log("WebGPU is not supported.");
+  }
+
+  const adapter = await navigator.gpu.requestAdapter();
+  if (!adapter) { 
+    console.log('Failed to get GPU adapter.');
+  };
+
+  device = await adapter.requestDevice();
+  console.log(device);
+};
 
 
-//const gpu = new GPU();
-const gpu = new GPUX();
-var kernelFireNode;
-var kernelLinkStart;
-var kernelSpikes;
-var kernelLinkEnd;
-var kernelActionNode;
+async function initialization() {
 
+    await initGPU();
 
-
-
-function initialization() {
     const filterSensor = space.nodes.filter(item => item.type === 3);
     arrSensor = [
         filterSensor.map(item => item.setting.key),           //Значение клаыиши
         filterSensor.map(item => space.nodes.indexOf(item))   //Индекс узла в прострастве нейронов
     ];
+    ////////////////////////////////////////////////////////////////////
 
-    linksData = Array.from({ length: space.links.length}, () => Array(5).fill(0));
-    linksData.forEach((item, index) => {
-        item[0] = space.nodes.findIndex(node => node.id === space.links[index].from);
-        item[1] = space.nodes.findIndex(node => node.id === space.links[index].to);
-        item[2] = space.links[index].setting.delay;
-        item[3] = space.links[index].type;
-        item[4] = item[3] == 3 ? 1 : space.links[index].setting.weight;
+    insensor = new Float32Array(Array(space.nodes.length).fill(0));
+
+    arrLinkData = Array.from({ length: space.links.length}, () => Array(5).fill(0));
+    arrLinkData.forEach((item, index) => {
+        item[0] = space.nodes.findIndex(node => node.id === space.links[index].from);    //Индекс источника
+        item[1] = space.nodes.findIndex(node => node.id === space.links[index].to);    //Индекс цели
+        item[2] = space.links[index].setting.delay;                                    //delay
+        item[3] = space.links[index].type;                                             //type
+        item[4] = item[3] == 3 ? 1 : space.links[index].setting.weight;                //weight
     });
 
-    neuronData = Array.from({length: space.nodes.length}, () => Array(9).fill(0));
-    neuronData.forEach((item, index) => {
+    linksData = new Float32Array(arrLinkData.flat());
+    
+
+    let arrNodeData = Array.from({length: space.nodes.length}, () => Array(9).fill(0));
+    arrNodeData.forEach((item, index) => {
         item[0] = space.nodes[index].type;
         item[1] = item[0] == 1 ? space.nodes[index].setting.threshold : 0;
         item[2] = item[0] == 1 ? space.nodes[index].setting.thresholdMax : 0;
         item[3] = item[0] == 1 ? space.nodes[index].setting.thresholdMin : 0;
-        item[4] = item[0] == 1 ? space.nodes[index].setting.levelMax : 0.1;
+        item[4] = item[0] == 1 ? space.nodes[index].setting.levelMax : 1;
         item[5] = item[0] == 1 ? space.nodes[index].setting.levelMin : 0;
         item[6] = item[0] == 1 ? space.nodes[index].setting.levelLeak : 1;
         item[7] = item[0] == 1 ? space.nodes[index].setting.refractoryPeriod : 0;
         item[8] = item[0] == 1 ? space.nodes[index].setting.modulationLeak : 0;
     });
 
-    fireNode = Array.from({ length: space.nodes.length }, () => Array(4).fill(0));
-    fireNode.forEach((item, index) => {
+    nodeData = new Float32Array(arrNodeData.flat());
+
+    let arrNodeState = Array.from({ length: space.nodes.length }, () => Array(4).fill(0));
+
+    arrNodeState.forEach((item, index) => {
         item[0] = 0;                    //Fire/postFire
         item[1] = 0;                    //Level
-        item[2] = neuronData[index][1]; //start threshold
+        item[2] = arrNodeData[index][1];   //start threshold
         item[3] = 0;                    //refractoryPeriod
     });
 
+    nodeState = new Float32Array(arrNodeState.flat());
 
-    linkStart = Array.from({ length: space.links.length}, () => Array(2).fill(0));
-    spikes = Array.from({length: space.links.length}, () => Array(32).fill(-1));
+    let arrSpikes = Array.from({length: space.links.length}, () => Array(32).fill(-1));
+    arrSpikes[0] = Array(32).fill(0);
 
-    const counts = {};
-    for (let i = 0; i < linksData.length; i++) {
-        const el = space.links[i].to;
-        counts[el] = (counts[el] || 0) + 1;
-    }
-    MaxInputLink = Math.max(...Object.values(counts));
+    spikes = new Float32Array(arrSpikes.flat());
+    
 
-    NeuronInpIndex = Array.from({ length: space.nodes.length }, () => Array(MaxInputLink).fill(-1));
-
-    linksData.forEach((element, index) => {
-        let n = 0;
-        while (NeuronInpIndex[element[1]][n] != -1) {
-            n++;
-            if (n > MaxInputLink) break;
-        }; 
-        if (n < MaxInputLink) NeuronInpIndex[element[1]][n] = index; 
+    ///////////////////////////////Оюьявлеине GPU буферов////////////////////////////////
+    gpuBufferLinksData = device.createBuffer({
+        mappedAtCreation: true,
+        size: linksData.byteLength,
+        usage: GPUBufferUsage.STORAGE,
     });
 
+    gpuBufferNodeData = device.createBuffer({
+        mappedAtCreation: true,
+        size: nodeData.byteLength,
+        usage: GPUBufferUsage.STORAGE,
+    });
+
+    gpuBufferStateNode = Array(2);
+    gpuBufferSpikes = Array(2);
+    for (let i = 0; i < 2; i++){
+      gpuBufferStateNode[i] = device.createBuffer({
+        mappedAtCreation: true,
+        size: nodeState.byteLength,
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+      });
+
+      gpuBufferSpikes[i] = device.createBuffer({
+        mappedAtCreation: true,
+        size: spikes.byteLength,
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+      });
+    };
+
+    gpuBufferInsensor = device.createBuffer({
+        mappedAtCreation: true,
+        size: insensor.byteLength,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    });
+
+    gpuBuefferRenderNode = device.createBuffer({
+      size: nodeState.byteLength,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+    });
+
+    gpuBuefferRenderSpiks = device.createBuffer({
+      size: spikes.byteLength,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+    });
+
+    /////////////////////////Передача данных и стартовых значений////////////////////////////////////    
+
+    new Float32Array(gpuBufferLinksData.getMappedRange()).set(linksData);
+    gpuBufferLinksData.unmap();
+
+    new Float32Array(gpuBufferNodeData.getMappedRange()).set(nodeData);
+    gpuBufferNodeData.unmap();
+
+    for (let i = 0; i < 2; i++){
+      new Float32Array(gpuBufferStateNode[i].getMappedRange()).set(nodeState);
+      gpuBufferStateNode[i].unmap();
+
+      new Float32Array(gpuBufferSpikes[i].getMappedRange()).set(spikes);
+      gpuBufferSpikes[i].unmap();
+    };
+
+    new Float32Array(gpuBufferInsensor.getMappedRange()).set(insensor);
+    gpuBufferInsensor.unmap();
 
 
-    //////////////////////GPU///////////////////////////
-    kernelLinkStart = gpu.createKernel(function(link, node, linkstart) {
-        let index = link[this.thread.x][0];
-        let res1 = node[index][0]; 
-        let res2 = linkstart[this.thread.x][1];
-        if (res1 == 100) res2++;
-        if (res2 > 31) res2 = 0;
-        return [res1, res2];
-    }).setOutput([linksData.length]);
+    ///////////////////////////////////////////////////////////////////////
 
-    kernelSpikes = gpu.createKernel(function(spikes, linkStart, links){
-        let res = spikes[this.thread.y][this.thread.x];
-        if (res == -2) res = -1;
-        if (res >= 0) res++;
-        if (res > links[this.thread.y][2]) res = -2;
-        if ((linkStart[this.thread.y][0] == 100) && (res == -1)) {
-           if (linkStart[this.thread.y][1] == this.thread.x) res = 0 
-        }; 
-        return res;
-    }).setOutput([32, space.links.length]);
+    const shaderModule = device.createShaderModule({
+        code: /* wgsl */`
+        struct link {
+            index_from : f32,
+            index_to : f32,
+            delay : f32,
+            type_link : f32,
+            weight : f32, 
+        }  
 
-    kernelLinkEnd = gpu.createKernel(function(spikes, linksData){
-        let res1 = 0;
-        let res2 = 0;
-        let res3 = 0;
-        for (let i = 0; i < 32; i++) {
-            if (spikes[this.thread.x][i] == -2) {
-                if ((linksData[this.thread.x][3] == 1) || (linksData[this.thread.x][3] == 4)) res1 += linksData[this.thread.x][4];
-                if (linksData[this.thread.x][3] == 2) res2 += linksData[this.thread.x][4];
-                if (linksData[this.thread.x][3] == 3) res3 = 1;
-            };
-        };
-        return [res1, res2, res3];
-    }).setOutput([linksData.length]);
+        struct node {
+            type_node : f32,
+            threshold : f32,
+            thresholdMax : f32,
+            thresholdMin : f32,
+            levelMax : f32,
+            levelMin : f32,
+            levelLeak : f32,
+            refractoryPeriod : f32,
+            modulationLeak : f32,
+        }
 
-    kernelActionNode = gpu.createKernel(function(InpIndex, linkEnd, fireNode, neuronData){
-        let res0 = fireNode[this.thread.x][0];
-        let res1 = fireNode[this.thread.x][1];
-        let res2 = fireNode[this.thread.x][2];
-        let res3 = fireNode[this.thread.x][3];
+        struct statenode {
+            postFire : f32,
+            Level_node : f32,
+            threshold : f32,
+            refractoryPeriod : f32,
+        }
+
+        struct spike {
+            index : f32,
+            time : array<f32, 31>,
+        }
 
 
-        let dir = 0;
-        let mod = 0;
-        let ele = 0;
+        @group(0) @binding(0) var<storage, read> linkData : array<link>;
+        @group(0) @binding(1) var<storage, read> nodeData : array<node>;
+        @group(0) @binding(2) var<storage, read> inNodeState : array<statenode>;
+        @group(0) @binding(3) var<storage, read> inSpikes : array<spike>;
+        @group(0) @binding(4) var<storage, read_write> outNodeState : array<statenode>;
+        @group(0) @binding(5) var<storage, read_write> outSpikes : array<spike>;
+        @group(0) @binding(6) var<storage, read> insensor : array<f32>;
 
-        for (let i = 0; i < this.constants.max; i++){
-            const index = InpIndex[this.thread.x][i];
-            if  (index !== -1)  {
-                dir += linkEnd[index][0];
-                mod += linkEnd[index][1];
-                if (linkEnd[index][2] == 1) ele = 1;
-            };
-        };
+        @compute @workgroup_size(8, 32)
+        fn spikepass(@builtin(global_invocation_id) global_id : vec3u) {
+           if (global_id.y == 0) {
+                return;
+           }    
+           
+           outSpikes[global_id.x].time[global_id.y - 1] = inSpikes[global_id.x].time[global_id.y - 1] - 1;
+           if (outSpikes[global_id.x].time[global_id.y - 1] < 0) { 
+                outSpikes[global_id.x].time[global_id.y - 1] = -1;
+                let indexfrom = u32(linkData[global_id.x].index_from);
+                if ((u32(inSpikes[global_id.x].index) == global_id.y - 1) && (inNodeState[indexfrom].postFire == 100f)){
+                    outSpikes[global_id.x].index = inSpikes[global_id.x].index + 1f;
+                    if (outSpikes[global_id.x].index > 30f) { outSpikes[global_id.x].index = 0f; }
+                    outSpikes[global_id.x].time[global_id.y - 1] = linkData[global_id.x].delay;
+                } 
+           }
 
-        res1 += dir;
-        res1 = Math.max(Math.min(res1, neuronData[this.thread.x][4]), neuronData[this.thread.x][5]);
+           if (outSpikes[global_id.x].time[global_id.y - 1] == 0) {
+                let indexNode = u32(linkData[global_id.x].index_to);
 
-        res2 += mod;
-        res2 = Math.max(Math.min(res2, neuronData[this.thread.x][2]), neuronData[this.thread.x][3]);
+                if (linkData[global_id.x].type_link == 1 || linkData[global_id.x].type_link == 4) {
+                    outNodeState[indexNode].Level_node = inNodeState[indexNode].Level_node + linkData[global_id.x].weight; 
+                    outNodeState[indexNode].Level_node = clamp(outNodeState[indexNode].Level_node, nodeData[indexNode].levelMin, nodeData[indexNode].levelMax);
 
-        if (res3 == 0) {
-            if ((res1 > res2) || (ele == 1)) {
-                res0 = 100;
-                res3 = neuronData[this.thread.x][7];
+                }
+
+                if (linkData[global_id.x].type_link == 2){
+                    outNodeState[indexNode].threshold = inNodeState[indexNode].threshold + linkData[global_id.x].weight;
+                    outNodeState[indexNode].threshold = clamp(outNodeState[indexNode].threshold, nodeData[indexNode].thresholdMin, nodeData[indexNode].thresholdMax);
+                }
+
+                if (linkData[global_id.x].type_link == 3 && inNodeState[indexNode].refractoryPeriod == 0){
+                    outNodeState[indexNode].postFire = 101f;
+                    outNodeState[indexNode].refractoryPeriod = nodeData[indexNode].refractoryPeriod + 1f;
+                }
+
+           }
+
+        }
+
+
+        @compute @workgroup_size(32)
+        fn nodepass(@builtin(global_invocation_id) global_id : vec3u) {
+            outNodeState[global_id.x].postFire = inNodeState[global_id.x].postFire - 1;
+            if (outNodeState[global_id.x].postFire < 0) { outNodeState[global_id.x].postFire = 0; }
+            outNodeState[global_id.x].refractoryPeriod = inNodeState[global_id.x].refractoryPeriod - 1;
+            if (outNodeState[global_id.x].refractoryPeriod < 0) { outNodeState[global_id.x].refractoryPeriod = 0; }
+            
+
+            if (inNodeState[global_id.x].Level_node > inNodeState[global_id.x].threshold && inNodeState[global_id.x].refractoryPeriod == 0) {
+                outNodeState[global_id.x].postFire = 100;
+                outNodeState[global_id.x].refractoryPeriod = nodeData[global_id.x].refractoryPeriod;
+            }    
+
+            if (insensor[global_id.x] > 0) { outNodeState[global_id.x].postFire = 100; }
+
+            if (inNodeState[global_id.x].Level_node > 0) {
+                outNodeState[global_id.x].Level_node = inNodeState[global_id.x].Level_node - nodeData[global_id.x].levelLeak;
+                if (outNodeState[global_id.x].Level_node < 0) { outNodeState[global_id.x].Level_node = 0; }
+            } else {
+                outNodeState[global_id.x].Level_node = inNodeState[global_id.x].Level_node + nodeData[global_id.x].levelLeak;
+                if (outNodeState[global_id.x].Level_node > 0) { outNodeState[global_id.x].Level_node = 0; }
             }
-        };
 
-        return [res0, res1, res2, res3];
-    }).setOutput([fireNode.length]).setConstants({ max: MaxInputLink });
+            if (inNodeState[global_id.x].threshold > nodeData[global_id.x].threshold) {
+                outNodeState[global_id.x].threshold = inNodeState[global_id.x].threshold - nodeData[global_id.x].modulationLeak;
+                if (outNodeState[global_id.x].threshold < nodeData[global_id.x].threshold) { outNodeState[global_id.x].threshold = nodeData[global_id.x].threshold; }
+            } else {
+                outNodeState[global_id.x].threshold = inNodeState[global_id.x].threshold + nodeData[global_id.x].modulationLeak;
+                if (outNodeState[global_id.x].threshold > nodeData[global_id.x].threshold) { outNodeState[global_id.x].threshold = nodeData[global_id.x].threshold; }
+            }
 
-    kernelFireNode = gpu.createKernel(function(node, neuronData) {
-        let res0 = node[this.thread.x][0];
-        let res1 = node[this.thread.x][1];
-        let res2 = node[this.thread.x][2];
-        let res3 = node[this.thread.x][3];
+        }
+        `
+    });
 
-        if (res0 > 0) res0--;
+    //////////////////////////////////////////////////////////////
 
-        const leak = neuronData[this.thread.x][6];
-        if (res1 > 0) {
-            res1 -= leak;
-            if (res1 < 0) res1 = 0;
-        } else {
-            res1 += leak;
-            if (res1 > 0) res1 = 0;
-        };
+    computePipelineSpikepass = device.createComputePipeline({   //createComputePipelineAsync
+        layout: "auto",
+        compute: {
+          module: shaderModule,
+          entryPoint: "spikepass"
+        }
+    });
 
-        const tleak = neuronData[this.thread.x][8];
-        const thtre = neuronData[this.thread.x][1];
-        if (res2 > thtre) {
-            res2 -= tleak;
-            if (res2 < thtre) res2 = thtre;
-        } else {
-            res2 += tleak;
-            if (res2 > thtre) res2 = thtre;
-        };
+   
+    computePipelineNodepass = device.createComputePipeline({    //createComputePipelineAsync
+        layout: "auto",
+        compute: {
+          module: shaderModule,
+          entryPoint: "nodepass"
+        }
+    });
 
-        if (res3 > 0) res3--;
+    //////////////////////////////////////////////////////////////
 
-        return [res0, res1, res2, res3];
-    }).setOutput([fireNode.length]);
+    bindGroupSpike = new Array(2);
+    bindGroupNode = new Array(2);
+
+    for (let i = 0; i < 2; i++){
+    bindGroupSpike[i] = device.createBindGroup({
+        layout:  computePipelineSpikepass.getBindGroupLayout(0 /* index */),
+        entries: [
+          {
+            binding: 0,
+            resource: {
+              buffer: gpuBufferLinksData
+            }
+          },
+          {
+            binding: 1,
+            resource: {
+              buffer: gpuBufferNodeData
+            }
+          },
+          {
+            binding: 2,
+            resource: {
+              buffer: gpuBufferStateNode[i]
+            }
+          },
+          {
+            binding: 3,
+            resource: {
+              buffer: gpuBufferSpikes[i]
+            }
+          },
+          {
+            binding: 4,
+            resource: {
+              buffer: gpuBufferStateNode[(i + 1) % 2]
+            }
+          },
+          {
+            binding: 5,
+            resource: {
+              buffer: gpuBufferSpikes[(i + 1) % 2]
+            }
+          }
+        ]
+    });
+   
 
 
-    /////////////////////END GPU////////////////////////
+    bindGroupNode[i] = device.createBindGroup({
+        layout:  computePipelineNodepass.getBindGroupLayout(0 /* index */),
+        entries: [
+          {
+            binding: 1,
+            resource: {
+              buffer: gpuBufferNodeData
+            }
+          },
+          {
+            binding: 2,
+            resource: {
+              buffer: gpuBufferStateNode[(i + 1) % 2]
+            }
+          },
+          {
+            binding: 4,
+            resource: {
+              buffer: gpuBufferStateNode[i]
+            }
+          },
+          {
+            binding: 6,
+            resource: {
+              buffer: gpuBufferInsensor
+            }
+          }
+        ]
+    });
+    };
+    
+    
+
+    //////////////////////////////////////////////////////////
+   
+
     
 }
 
 
 
-function tact() {
+async function tact() {
 
-    linkStart = kernelLinkStart(linksData, fireNode, linkStart);
-    spikes = kernelSpikes(spikes, linkStart, linksData);
-    linkEnd = kernelLinkEnd(spikes, linksData);
-    fireNode = kernelFireNode(fireNode, neuronData);
-    fireNode = kernelActionNode(NeuronInpIndex, linkEnd, fireNode, neuronData);
-    
+  let endTime = new Date().getTime();
+  timeDiff = endTime - startTime;
+  startTime = endTime;
+
+  commandEncoder = device.createCommandEncoder();
+
+  const passEncoder = commandEncoder.beginComputePass();
+  passEncoder.setPipeline(computePipelineSpikepass);
+  passEncoder.setBindGroup(0, bindGroupSpike[loopTimes]);
+  let workgroupCountX = Math.ceil(space.links.length / 8);
+  passEncoder.dispatchWorkgroups(workgroupCountX, 1);
+  
+  passEncoder.setPipeline(computePipelineNodepass);
+  passEncoder.setBindGroup(0, bindGroupNode[loopTimes]);
+  workgroupCountX = Math.ceil(space.nodes.length / 32);
+  passEncoder.dispatchWorkgroups(workgroupCountX, 1);
+  passEncoder.end();
+
+  commandEncoder.copyBufferToBuffer(gpuBufferStateNode[loopTimes], 0, gpuBuefferRenderNode, 0, nodeState.byteLength);
+  commandEncoder.copyBufferToBuffer(gpuBufferSpikes[loopTimes], 0, gpuBuefferRenderSpiks, 0, spikes.byteLength);
+  commandEncoder.clearBuffer(gpuBufferInsensor, 0, insensor.byteLength);
+
+  device.queue.submit([commandEncoder.finish()]);
+
+  await gpuBuefferRenderNode.mapAsync(GPUMapMode.READ);
+  fireNode = new Float32Array(gpuBuefferRenderNode.getMappedRange().slice());
+  gpuBuefferRenderNode.unmap();
+
+  await gpuBuefferRenderSpiks.mapAsync(GPUMapMode.READ);
+  renderspike = new Float32Array(gpuBuefferRenderSpiks.getMappedRange().slice());
+  gpuBuefferRenderSpiks.unmap();
+
+  loopTimes = 1 - loopTimes;
+  intervalID = setTimeout(tact, 1);
 };
 
 
-function StartSpace() {
+async function StartSpace() {
     playing = true;
-    initialization();
-    intervalID = setInterval(tact, 1);  
+    loopTimes = 0;
+    await initialization();
+    intervalID = setTimeout(tact, 1);  
 };
 
 function StopSpace() {
     playing = false;
     clearInterval(intervalID);
+
     arrSensor = [];
     spikes = [];
 };
 
 function FireSensor(index) {
-    if (fireNode[arrSensor[1][index]][0] < 80) {
-        fireNode[arrSensor[1][index]][0] = 100;
-    }; 
+    insensor[arrSensor[1][index]] = 1; 
+    device.queue.writeBuffer(gpuBufferInsensor, 0, insensor);
+    insensor[arrSensor[1][index]] = 0; 
 };
