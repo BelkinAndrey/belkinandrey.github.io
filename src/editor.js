@@ -610,6 +610,8 @@ var renderId;
 var tickinId;
 var tokens = [];
 
+var nodegraph = [];
+
 
 async function tactRender() {
 
@@ -620,9 +622,12 @@ async function tactRender() {
 
 
   space.nodes.forEach((element, index) => {
-    const node = graph.getCell(element.id);
-    node.attr('body/fill', getColor('#383838', '#ffff00', fireNode[index * 4]/100));
+    const node = nodegraph[index];
+    let color = '#383838';
+    if (fireNode[index * 4] > 80) color = '#ffff00'
+    node.attr('body/fill', color);
   });
+
 
   if (selectStart) {
     const NodeSpace = space.nodes.find(N => N.id === selectStart.model.id);
@@ -714,6 +719,8 @@ function StartRender() {
   });
 
   localStorage.setItem("sensors", JSON.stringify(sensors));
+
+  nodegraph = space.nodes.map((item) => {return graph.getCell(item.id);});
 };
 
 function StopRender() {
