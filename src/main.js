@@ -75,6 +75,8 @@ const paper = new joint.dia.Paper({
 
 const editController = new EditController({ graph, paper, createLink, createNode, size, space });
 const viewController = new ViewController({ graph, paper, createLink, createNode, size, space });
+editController.startListening();
+viewController.startListening();
 
 
 // Create a node with `id`
@@ -313,8 +315,9 @@ function showAll (){
 
     paper.translate((-border.x + offsetX) * scale, (-border.y + offsetY) * scale);
 
-    editController.startListening();
-    viewController.startListening();
+    //editController.startListening();
+    //viewController.startListening();
+    
 };
 
 const styles = V.createSVGStyle(`

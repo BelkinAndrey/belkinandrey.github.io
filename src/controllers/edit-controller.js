@@ -1,6 +1,7 @@
 class EditController extends Controller {
     startListening() {
         const { graph, paper } = this.context;
+
     
         this.listenTo(graph, {
             'change:source': replaceLink,
@@ -50,6 +51,7 @@ class EditController extends Controller {
         let isPanning = false;
         let panStart = null;
         let panOffset = { x: paper.translate().tx, y: paper.translate().ty };
+        
         
         paper.on('blank:pointerdown', (evt) => {
             if (evt.button === 1) {
