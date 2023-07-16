@@ -122,12 +122,6 @@ function createNeuron (id) {
 
     view.hideTools();
 
-    const NodeSpace = space.nodes.find(N => N.id === id);
-    let symbol = '';
-    if (NodeSpace.setting.feedback == 1) symbol = '⟲';
-    node.attr('label/font-size', 15);
-    node.attr('label/text', symbol);
-
     return node;
 };
 
@@ -252,8 +246,8 @@ function createLink(s, t, color=outlineColor) {
                 unSelect(null, {button : 0});
                 localStorage.setItem("space", JSON.stringify(space));
 
-                StopRender();
                 StopSpace();
+                StopRender();
                 btnPlay.children[0].src = "img/play.png"; 
             } })
         ]

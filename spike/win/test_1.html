@@ -22,7 +22,7 @@
             border: 1px solid gray;
             padding: 10px;
             margin-bottom: 20px;
-            width: 500px;
+            width: 400px;
             gap: 10px; /* добавляем промежуток между строками */
 		}
 
@@ -53,6 +53,21 @@
 			margin-right: 10px;
             vertical-align: middle; /* Add this line */
 		}
+
+		.button {
+			height: 25px;
+            width: 25px;
+			vertical-align: middle;
+			margin-right: 10px;
+			border-radius: 4px;
+			border: 1px solid #ccc;
+			cursor: pointer;
+            background-color: #a1a1a1;
+		}
+
+        .button:active {
+             background-color: red;
+        }
         
 	</style>
 </head>
@@ -91,32 +106,27 @@
 			<div class="row" id = "sensor">
 				<label class="label">id :</label>
 				<input class="input" type="text" value="q">
-				<input class="range" type="range" min="0" max="1" step="0.01" value="0" >
-				<output class="output">0.00</output>
+				<button class="button" ></button>
 			</div>
 			<div class="row" id = "sensor">
 				<label class="label">id :</label>
 				<input class="input" type="text" value="w">
-				<input class="range" type="range" min="0" max="1" step="0.01" value="0" >
-				<output class="output">0.00</output>
+				<button class="button" ></button>
 			</div>
             <div class="row" id = "sensor">
 				<label class="label">id :</label>
 				<input class="input" type="text" value="e">
-				<input class="range" type="range" min="0" max="1" step="0.01" value="0" >
-				<output class="output">0.00</output>
+				<button class="button" ></button>
 			</div>
             <div class="row" id = "sensor">
 				<label class="label">id :</label>
 				<input class="input" type="text" value="r">
-				<input class="range" type="range" min="0" max="1" step="0.01" value="0" >
-				<output class="output">0.00</output>
+				<button class="button" ></button>
 			</div>
             <div class="row" id = "sensor">
 				<label class="label">id :</label>
 				<input class="input" type="text" value="t">
-				<input class="range" type="range" min="0" max="1" step="0.01" value="0" >
-				<output class="output">0.00</output>
+				<button class="button" ></button>
 			</div>
 		</div>
 	</div>
@@ -124,44 +134,33 @@
         const actuators = document.querySelectorAll('div[id="actuator"]');
         const sensors = document.querySelectorAll('div[id="sensor"]');
 
-		var arr = Array(sensors.length).fill(0);
 
+        sensors.forEach(sensor => {
 
-        sensors.forEach((sensor, index) => {
-
-            sensor.querySelector(".range").addEventListener("input", (event) =>{
+            sensor.querySelector(".button").addEventListener('mousedown', () =>{
                 const id = sensor.querySelector(".input").value;
                 if (id === '') return;
-				let value = parseFloat(event.target.value);
-				arr[index] = value;
-				let out = sensor.querySelector(".output");
-				out.value = value.toFixed(2);
+                let sensordata = JSON.parse(localStorage.getItem('sensors'));
+                if (sensordata === null) return;
+                sensordata[id] = 1;
+                localStorage.setItem("sensors", JSON.stringify(sensordata));
             })
         });
 
 
         function updata () {
             const data = JSON.parse(localStorage.getItem('actuators'));
-			let sensordata = JSON.parse(localStorage.getItem('sensors'));
-
             if (data === null) return;
             for (let i = 0; i < actuators.length; i++) {
                 const id = actuators[i].querySelector('.input').value;
                 if (data[id] === undefined) return;
-                const val = data[id].value * 94 + 161;
-				const val2 = 161 - data[id].value * 161;
-                actuators[i].querySelector('.indicator').style.backgroundColor = `rgb(${val}, ${val2}, ${val2})`;
+                const val = data[id].value;
+                if (val > 50) actuators[i].querySelector('.indicator').style.backgroundColor = "#FF0000";
+                else actuators[i].querySelector('.indicator').style.backgroundColor = "#a1a1a1";
             };
-
-			if (sensordata === null) return;
-			for (let i = 0; i < sensors.length; i++) {
-				const id = sensors[i].querySelector('.input').value;
-				sensordata[id] = arr[i];
-			};
-			localStorage.setItem("sensors", JSON.stringify(sensordata));
         };
 
-        const IntervalId = setInterval(updata, 51);
+        const IntervalId = setInterval(updata, 21);
     </script>
 </body>
 </html>

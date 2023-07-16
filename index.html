@@ -7,9 +7,11 @@
     <link rel="stylesheet" type="text/css" href="css/social.css">
     <link rel="stylesheet" type="text/css" href="joint/joint.css">
     <script src="./data/neurons_for_test_1.json"></script>
+    <script src="./data/hbx_1_1.json"></script>
+    <script src="./data/hbx_1_2.json"></script>
+    <script src="./data/hbx_1_3.json"></script>
     <script src="./data/rotation.json"></script>
-    <script src="./data/neurons_2.json"></script>
-    <script src="./data/neurons_3.json"></script>
+    <script src="./data/place_cells.json"></script>
 </head>
 <body>
     
@@ -44,14 +46,15 @@
         <select id="select-file">
           <option value="null" disabled selected>Load..</option>
           <option value="neurons_for_test_1">neurons_for_test_1</option>
-          <option value="neurons_2">neurons_2</option>
-          <option value="neurons_3">neurons_3</option>
+          <option value="hbx_1_1">hbx_1_1</option>
+          <option value="hbx_1_2">hbx_1_2</option>
+          <option value="hbx_1_3">hbx_1_3</option>
           <option value="rotation">rotation</option>
+          <option value="place_cells">place_cells</option>
         </select>
         <select id="open-windows">
           <option value="null" disabled selected>Open window..</option>
           <option value="test_1">Test_1</option>
-          <option value="test_1_for_unity/index">Test_1_for_unity</option>
         </select>
       </div>
     </div>
@@ -107,49 +110,35 @@
               <label class="input-label" style="color: red;">does not work!</label>
             </div>
             <div class="input-container open" data-value="1">
-              <label class="input-label">level:</label>
-              <label class="output-label" id="level-output">_</label>
+              <label class="input-label">output:</label>
+              <label class="output-label" id="output-output">_</label>
             </div>
             <div class="input-container open" data-value="1">
-              <label class="input-label">threshold:</label>
-              <label class="output-label"  id="threshold-output">_</label>
+              <label class="input-label">sensitivity:</label>
+              <label class="output-label" id="sensitivity-output">_</label>
             </div>
             <div class="input-container open" data-value="1">
-              <label class="input-label">rest time:</label>
-              <label class="output-label"  id="rest-time-output">_</label>
+              <label class="input-label">sensitivity:</label>
+              <input type="number" id="sensitivity-input" class="input-field" placeholder="1" value="1">
             </div>
             <div class="input-container open" data-value="1">
-              <label class="input-label">threshold:</label>
-              <input type="number" id="threshold-input" class="input-field" placeholder="0" value="10">
+              <label class="input-label">top-level:</label>
+              <input type="number" id="top-level-input" class="input-field" placeholder="1" value="1" pattern="[0-9]+">
             </div>
             <div class="input-container open" data-value="1">
-              <label class="input-label">threshold-max:</label>
-              <input type="number" id="threshold-max-input" class="input-field" placeholder="0" value="100" min="0" pattern="[0-9]+">
+              <label class="input-label">lower-level:</label>
+              <input type="number" id="lower-level-input" class="input-field" placeholder="0" value="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1"><hr></div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">feedback:</label>
+              <input type="checkbox" id="feedback-input" class="input-checkbox">
             </div>
             <div class="input-container open" data-value="1">
-              <label class="input-label">threshold-min:</label>
-              <input type="number" id="threshold-min-input" class="input-field" placeholder="0" value="0" pattern="[0-9]+">
+              <label class="input-label">weight:</label>
+              <input type="number" id="weight-node-input" class="input-field" placeholder="1" value="1" pattern="[0-9]+">
             </div>
-            <div class="input-container open" data-value="1">
-              <label class="input-label">level-max:</label>
-              <input type="number" id="level-max-input" class="input-field" placeholder="0" value="200" min="0" pattern="[0-9]+">
-            </div>
-            <div class="input-container open" data-value="1">
-              <label class="input-label">level-min:</label>
-              <input type="number" id="level-min-input" class="input-field" placeholder="0" value="0" pattern="[0-9]+">
-            </div>
-            <div class="input-container open" data-value="1">
-              <label class="input-label">level-leak:</label>
-              <input type="number" id="level-leak-input" class="input-field" placeholder="0" value="1" min="0" pattern="[0-9]+">
-            </div>
-            <div class="input-container open" data-value="1">
-              <label class="input-label">refractory period:</label>
-              <input type="number" id="refractory-period-input" class="input-field" placeholder="0" value="0" min="0" pattern="[0-9]+">
-            </div>
-            <div class="input-container open" data-value="1">
-              <label class="input-label">modulation leak:</label>
-              <input type="number" id="modulation-leak-input" class="input-field" placeholder="0" value="0" min="0" pattern="[0-9]+">
-            </div>
+            <div class="input-container open" data-value="1"><hr></div>
             <div class="input-container" data-value="3">
               <label class="input-label">key action:</label>
               <input type="text" id="key-input" class="input-field" value="" onkeydown="return handleKeyDown(event)">
@@ -187,8 +176,8 @@
           <label>
             <input type="radio" name="link-type" value="3">
             <div class="option">
-              <img src="img/image3.png" alt="electrical">
-              <span class="label-text">electrical</span>
+              <img src="img/image3.png" alt="plasticity">
+              <span class="label-text">plasticity</span>
             </div>
           </label>
           <label>
@@ -200,7 +189,7 @@
           </label>
         </div>
         <div>
-          <div class="input-container-link" data-value="4">
+          <div class="input-container-link" data-value="3,4">
             <label class="input-label" style="color: red;">does not work!</label>
           </div>
           <div class="input-container-link" data-value="4">
@@ -211,9 +200,17 @@
             <label class="input-label">target weight:</label>
             <label class="output-label" id="target-weight-output">_</label>
           </div>
-          <div class="input-container-link open" data-value="1,2,4">
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">track:</label>
+            <label class="output-label" id="track-output">_</label>
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">plasticity:</label>
+            <label class="output-label" id="plasticity-output">_</label>
+          </div>
+          <div class="input-container-link open" data-value="1,2,3,4">
             <label class="input-label">weight:</label>
-            <input type="number" id="weight-input" class="input-field" placeholder="10" value="10">
+            <input type="number" id="weight-input" class="input-field" placeholder="1" value="1">
           </div>
           <div class="input-container-link" data-value="4">
             <label class="input-label">weight-max:</label>
@@ -223,33 +220,33 @@
             <label class="input-label">weight-min:</label>
             <input type="number" id="weight-min-input" class="input-field" placeholder="-100" value="-100">
           </div>
-          <div class="input-container-link open" data-value="1,2,3,4">
-            <label class="input-label">delay:</label>
-            <input type="number" id="delay-input" class="input-field" placeholder="0" value="0" min="0">
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">threshold from:</label>
+            <input type="number" id="threshold-from-input" class="input-field" placeholder="1" value="1">
           </div>
           <div class="input-container-link" data-value="4">
-            <label class="input-label">time before:</label>
-            <input type="number" id="time-before-input" class="input-field" placeholder="1" value="1">
+            <label class="input-label">threshold to:</label>
+            <input type="number" id="threshold-to-input" class="input-field" placeholder="1" value="1">
           </div>
           <div class="input-container-link" data-value="4">
-            <label class="input-label">time after:</label>
-            <input type="number" id="time-after-input" class="input-field" placeholder="1" value="1">
+            <label class="input-label">track-up:</label>
+            <input type="number" id="track-up-input" class="input-field" placeholder="0.1" value="0.1">
           </div>
           <div class="input-container-link" data-value="4">
-            <label class="input-label">weight-up:</label>
-            <input type="number" id="weight-up-input" class="input-field" placeholder="0.1" value="0.1">
+            <label class="input-label">track-down:</label>
+            <input type="number" id="track-down-input" class="input-field" placeholder="0.001" value="0.001">
           </div>
           <div class="input-container-link" data-value="4">
-            <label class="input-label">weight-down:</label>
-            <input type="number" id="weight-down-input" class="input-field" placeholder="0.001" value="0.001">
+            <label class="input-label">rate:</label>
+            <input type="number" id="rate-input" class="input-field" placeholder="1" value="1">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">degradation:</label>
+            <input type="number" id="degradation-input" class="input-field" placeholder="1" value="1">
           </div>
           <div class="input-container-link" data-value="4">
             <label class="input-label">plasticity:</label>
             <input type="number" id="plasticity-input" class="input-field" placeholder="1" value="1">
-          </div>
-          <div class="input-container-link" data-value="4">
-            <label class="input-label">memory time:</label>
-            <input type="number" id="memory-time-input" class="input-field" placeholder="1000000" value="1000000">
           </div>
         </div>
       </div>
@@ -257,11 +254,6 @@
     <div class="bottom"> 
       <div class="button-bottom">
         <div id="label-time" style="width: 150px; word-wrap: break-word; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Time tick: -- mc</div>
-        <div>Spike Visualization:</div>
-        <label class="chec">
-          <input type="checkbox" id="VisSpike" checked>
-          <span class="slider"></span>
-        </label>
       </div>
       <div class="button-social">
       <div class="social github">
@@ -289,7 +281,7 @@
         <a href="https://fluxengine.ai/" target="_blank">fluxengine.ai</a>
       </div>
       </div>
-      <div style="margin-right: 10px;">version: 0.2023.07.06</div>
+      <div style="margin-right: 10px;">version: 0.2023.07.23</div>
     </div>
 
 
@@ -297,6 +289,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.4.1/backbone.js"></script>
     <script src="./joint/joint.js"></script>
+
+    <script src="./gpu/gpu-browser.min-2.15.0-FIX-GPUX.js"></script>
 
     <script src="src/spaceNeuron.js"></script> 
     <script src="src/controller.js"></script>
@@ -309,7 +303,7 @@
     <!--Скрипт для загрузки файлов-->
     <script>
       const selectFile = document.getElementById('select-file');
-      const fileList = { neurons_for_test_1, neurons_2, neurons_3, rotation };
+      const fileList = { neurons_for_test_1, hbx_1_1, hbx_1_2, hbx_1_3, rotation, place_cells };
       selectFile.addEventListener('change', (event) => {
         const nameValue = event.target.value;
         RemoveAll();

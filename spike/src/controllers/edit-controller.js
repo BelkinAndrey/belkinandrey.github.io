@@ -42,7 +42,7 @@ class EditController extends Controller {
                 paper.scale(zoomLevel, zoomLevel);
                 this.panOffset.x = -x*zoomLevel+evt.offsetX;
                 this.panOffset.y = -y*zoomLevel+evt.offsetY;
-                paper.translate(this.panOffset.x , this.panOffset.y );
+                paper.translate(panOffset.x , panOffset.y );
             }
         });
     

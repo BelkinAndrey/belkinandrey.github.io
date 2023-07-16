@@ -1,57 +1,49 @@
-const btnPlay = document.getElementById('play-stop-btn');
+const btnPlay = document.getElementById('play-stop-btn');                 //Кнопка плей/стоп
+const leftPanel = document.querySelector('.left');                        //левая панель
+const rightPanel = document.querySelector('.right');                      //правая панель
+const RemoveAllButton = document.getElementById("remove-all-btn");        //кнопка очистить всё
+const SaveButton = document.getElementById('save-btn');                   //кнопка сохранить/скачать
+const OpenButton = document.getElementById('open-btn');                   //кнопка открыть/загрузить
+const SelectFile = document.getElementById('select-file');                //выподающее меню выюора файла  
+const listElement = document.getElementById('node-list');                 //Левая панел дерево обьектов
+const radioLink = document.getElementsByName('link-type');                //Кнопки переключения типа связи
+const radioNode = document.getElementsByName('node-type');                //Кнопки переключения типа нод
+const linkLabel = document.getElementById('link-label');                  //Заголовок Link 
+const nodeLabel = document.getElementById('node-label');                  //Заголовок Node
+const butDefLink = document.getElementById('button-default-link');        //Кнопка по умолчанию связи
+const butAppLink = document.getElementById('button-applay-link');         //Кнопка применить для связи
+const butDefNode = document.getElementById('button-default-node');        //Кнопка по умолчанию для ноды
+const butAppNode = document.getElementById('button-applay-node');         //Кнопка применить для ноды
 
-const leftPanel = document.querySelector('.left');
-const rightPanel = document.querySelector('.right');
-const RemoveAllButton = document.getElementById("remove-all-btn");
-const SaveButton = document.getElementById('save-btn');
-const OpenButton = document.getElementById('open-btn');
-const SelectFile = document.getElementById('select-file');
-const listElement = document.getElementById('node-list');
-const radioLink = document.getElementsByName('link-type');
-const radioNode = document.getElementsByName('node-type');
-const linkLabel = document.getElementById('link-label');
-const nodeLabel = document.getElementById('node-label');
-const butDefLink = document.getElementById('button-default-link');
-const butAppLink = document.getElementById('button-applay-link');
-const butDefNode = document.getElementById('button-default-node');
-const butAppMode = document.getElementById('button-applay-node');
+const inpWeight = document.getElementById('weight-input');                //Строка ввода значение веса для связи
+const inpWeightMax = document.getElementById('weight-max-input');         //Строка ввода максимальный вес для хебба
+const inpWeightMin = document.getElementById('weight-min-input');         //Строка ввода минимальный вес для хебба
+const inpthresholdFrom = document.getElementById('threshold-from-input'); //Строка ввода уровень активности для источника
+const inpthresholdTo = document.getElementById('threshold-to-input');     //Строка ввода уровень активности для цели
+const inptrackUp = document.getElementById('track-up-input');             //Строка ввода значение увеличение следа
+const inptrackDown = document.getElementById('track-down-input');         //Строка ввода значение снижения следа
+const inprate = document.getElementById('rate-input');                    //Строка ввода награда
+const inpdegradation = document.getElementById('degradation-input');      //Строка ввода деградации
+const inpPlasticity = document.getElementById('plasticity-input');        //Строка ввода пластичность для хебба
 
-const inpWeight = document.getElementById('weight-input');
-const inpWeightMax = document.getElementById('weight-max-input');
-const inpWeightMin = document.getElementById('weight-min-input');
-const inpDelay = document.getElementById('delay-input');
-const inpTimeBefore = document.getElementById('time-before-input');
-const inpTimeAfter = document.getElementById('time-after-input');
-const inpWeightUp = document.getElementById('weight-up-input');
-const inpWeightDown = document.getElementById('weight-down-input');
-const inpPlasticity = document.getElementById('plasticity-input');
-const inpMemoryTime = document.getElementById('memory-time-input');
+const labeloutput = document.getElementById('output-output');             //Метка выхода
+const labelsensitivity = document.getElementById('sensitivity-output');   //Метка чувствительности
+const inpSensitivity = document.getElementById('sensitivity-input');      //Строка ввода чувствительность
+const inptoplevel = document.getElementById('top-level-input');           //Строка ввода верхни предел уровня
+const inplowerlevel = document.getElementById('lower-level-input');       //Строка ввода нижний предел уровня
+const inpfeedback = document.getElementById('feedback-input');            //Галочка есть ли обратная связь
+const inpweightnode = document.getElementById('weight-node-input');       //Строка ввода вес обратной связи
+const inpKey = document.getElementById('key-input');                      //Строка ввода клавиши для ноды
+const inpId = document.getElementById('id-input');                        //Строка ввода id для ноды
 
-const inpThreshold = document.getElementById('threshold-input');
-const inpThresholdMax = document.getElementById('threshold-max-input');
-const inpThresholdMin = document.getElementById('threshold-min-input');
-const inpLevelMax = document.getElementById('level-max-input');
-const inpLevelMin = document.getElementById('level-min-input');
-const inpLevelLeak = document.getElementById('level-leak-input');
-const inpRefractoryPeriod = document.getElementById('refractory-period-input');
-const inpModulationLeak = document.getElementById('modulation-leak-input');
-const inpKey = document.getElementById('key-input');
-const inpId = document.getElementById('id-input');
+const inputFields = document.querySelectorAll('input.input-field[type="number"]');  //Все строки ввода цифр 
 
-const switchVisSpike = document.getElementById('VisSpike');
-let VisSpike = true;
+const openWin = document.getElementById('open-windows');                  //Выподающее меню открыть окно
+const labelTime = document.getElementById('label-time');                  //Вывод интервала времени между тактами 
 
-const inputFields = document.querySelectorAll('input.input-field[type="number"]');  
+var key_down = '';
 
-const labelLevel = document.getElementById('level-output');
-const labelThreshold = document.getElementById('threshold-output');
-const labelRest = document.getElementById('rest-time-output');
-
-const openWin = document.getElementById('open-windows');
-
-const labelTime = document.getElementById('label-time');
-
-
+/////////////////////Управление боковыми панелями
 let isResizingLeft = false;
 let isResizingRight = false;
 let lastX;
@@ -140,12 +132,15 @@ document.addEventListener('mouseup', () => {
   isResizingRight = false;
 });
 
+//////////////////////////////////////end управление боковыми панелями
 
+//////////////////Конпка очистить всё
 RemoveAllButton.addEventListener("click", () => {
   RemoveAll();
   graph.clear();
 });
 
+/////////////////Конпка сохрать
 SaveButton.addEventListener('click', () => {
   const saveSpace = JSON.parse(localStorage.getItem('space'));
   const blob = new Blob([JSON.stringify(saveSpace)],  {type: 'application/json' });
@@ -161,6 +156,8 @@ SaveButton.addEventListener('click', () => {
   URL.revokeObjectURL(link.href);
 });
 
+
+/////////////////Кнопка открыть
 OpenButton.addEventListener('click', () => {
   const input = document.createElement('input');
   input.type = 'file';
@@ -182,7 +179,7 @@ OpenButton.addEventListener('click', () => {
   input.click();
 });
 
-
+///////////////////Дерево обьектов в левой панели
 function reFreshInspector(){
   listElement.innerHTML = '';
   space.nodes.forEach(function(node) {
@@ -262,14 +259,12 @@ function reFreshInspector(){
       });
     });
   });
-
-
 }
 
 
-reFreshInspector();
+//////////////////////////end Дерево обьектов в левой панели
 
-
+//////////////////////////Кнопки переключения типов связи
 const divsLink = document.getElementsByClassName('input-container-link');
 
 radioLink.forEach(radio => {
@@ -291,6 +286,7 @@ function changeRadioLink() {
     };
 }
 
+//////////////////////////Кнопки переключения типов нод
 const divsNode = document.getElementsByClassName('input-container');
 
 radioNode.forEach(radio => {
@@ -312,8 +308,10 @@ function changeRadioNode() {
     }
   };
 }
+/////////////////////////
 
 
+//////////////////////////Установить значения связей по умолчанияю
 butDefLink.addEventListener('click', SetDefaultLink);
 
 function SetDefaultLink() {
@@ -321,35 +319,32 @@ function SetDefaultLink() {
   inpWeight.value = LinkDefault.direct.weight.toString();
   inpWeightMax.value = LinkDefault.hebb.weightMax.toString();
   inpWeightMin.value = LinkDefault.hebb.weightMin.toString();
-  inpDelay.value = LinkDefault.direct.delay.toString();
-  inpTimeBefore.value = LinkDefault.hebb.timeBefore.toString();
-  inpTimeAfter.value = LinkDefault.hebb.timeAfter.toString();
-  inpWeightUp.value = LinkDefault.hebb.weightUp.toString();
-  inpWeightDown.value = LinkDefault.hebb.weightDown.toString();
+  inpthresholdFrom.value = LinkDefault.hebb.thresholdFrom.toString();
+  inpthresholdTo.value = LinkDefault.hebb.thresholdTo.toString();
+  inptrackUp.value = LinkDefault.hebb.trackUp.toString();
+  inptrackDown.value = LinkDefault.hebb.trackDown.toString();
+  inprate.value = LinkDefault.hebb.rate.toString();
+  inpdegradation.value = LinkDefault.hebb.degradation.toString();
   inpPlasticity.value = LinkDefault.hebb.plasticity.toString();
-  inpMemoryTime.value = LinkDefault.hebb.memoryTime.toString();
-  
 
   if (linkType === 1) linkSetting = LinkDefault.direct;
   if (linkType === 2) linkSetting = LinkDefault.modulating;
-  if (linkType === 3) linkSetting = LinkDefault.electrical;
+  if (linkType === 3) linkSetting = LinkDefault.plasticity;
   if (linkType === 4) linkSetting = LinkDefault.hebb;
-
 };
 
 SetDefaultLink();
 
+///////////////////Установить значения по умолчанию для нод
 butDefNode.addEventListener('click', SetDefaultNode);
 
 function SetDefaultNode() {
-  inpThreshold.value = NeuronDefault.threshold.toString();
-  inpThresholdMax.value = NeuronDefault.thresholdMax.toString();
-  inpThresholdMin.value = NeuronDefault.thresholdMin.toString();
-  inpLevelMax.value = NeuronDefault.levelMax.toString();
-  inpLevelMin.value = NeuronDefault.levelMin.toString();
-  inpLevelLeak.value = NeuronDefault.levelLeak.toString();
-  inpRefractoryPeriod.value = NeuronDefault.refractoryPeriod.toString();
-  inpModulationLeak.value = NeuronDefault.modulationLeak.toString();
+
+  inpSensitivity.value = NeuronDefault.sensitivity.toString();
+  inptoplevel.value = NeuronDefault.toplevel.toString();
+  inplowerlevel.value = NeuronDefault.lowerlevel.toString();
+  inpfeedback.checked = NeuronDefault.feedback == 1 ? true : false;
+  inpweightnode.value = NeuronDefault.weight.toString();
   inpKey.value = '';
   inpId.value = '';
 
@@ -360,17 +355,15 @@ function SetDefaultNode() {
 }
 
 SetDefaultNode();
-
+/////////////////////////
+////////////////////////Получить настройки выделенного узла
 function SetSettingNode() {
   if (nodeType === 1) {
-    inpThreshold.value = NodeSetting.threshold.toString();
-    inpThresholdMax.value = NodeSetting.thresholdMax.toString();
-    inpThresholdMin.value = NodeSetting.thresholdMin.toString();
-    inpLevelMax.value = NodeSetting.levelMax.toString();
-    inpLevelMin.value = NodeSetting.levelMin.toString();
-    inpLevelLeak.value = NodeSetting.levelLeak.toString();
-    inpRefractoryPeriod.value = NodeSetting.refractoryPeriod.toString();
-    inpModulationLeak.value = NodeSetting.modulationLeak.toString();
+    inpSensitivity.value = NodeSetting.sensitivity.toString();
+    inptoplevel.value = NodeSetting.toplevel.toString();
+    inplowerlevel.value = NodeSetting.lowerlevel.toString();
+    inpfeedback.checked = NodeSetting.feedback == 1 ? true : false;
+    inpweightnode.value = NodeSetting.weight.toString();
   };
 
   if (nodeType === 2) {
@@ -383,33 +376,30 @@ function SetSettingNode() {
   };
 }
 
-
+////////////////////////Получить настройки выделенной связи
 function SetSettingLink() {
   switch (linkType) {
     case 1:
     case 2:
-      inpWeight.value = linkSetting.weight.toString();
-      inpDelay.value = linkSetting.delay.toString();
-      break;
     case 3:
-      inpDelay.value = linkSetting.delay.toString();
+      inpWeight.value = linkSetting.weight.toString();
       break;
     case 4:
       inpWeight.value = linkSetting.weight.toString();
       inpWeightMax.value = linkSetting.weightMax.toString();
       inpWeightMin.value = linkSetting.weightMin.toString();
-      inpDelay.value = linkSetting.delay.toString();
-      inpTimeBefore.value = linkSetting.timeBefore.toString();
-      inpTimeAfter.value = linkSetting.timeAfter.toString();
-      inpWeightUp.value = linkSetting.weightUp.toString();
-      inpWeightDown.value = linkSetting.weightDown.toString();
+      inpthresholdFrom.value = linkSetting.thresholdFrom.toString();
+      inpthresholdTo.value = linkSetting.thresholdTo.toString();
+      inptrackUp.value = linkSetting.trackUp.toString();
+      inptrackDown.value = linkSetting.trackDown.toString();
+      inprate.value = linkSetting.rate.toString();
+      inpdegradation.value = linkSetting.degradation.toString();
       inpPlasticity.value = linkSetting.plasticity.toString();
-      inpMemoryTime.value = linkSetting.memoryTime.toString();
       break;
   }
 }
 
-
+/////////////////////Применить параметры к связи
 butAppLink.addEventListener('click', ApplaySettingLink);
 
 function ApplaySettingLink() {
@@ -431,7 +421,8 @@ function ApplaySettingLink() {
   }
 };
 
-butAppMode.addEventListener('click', ApplaySettingNode);
+/////////////////////Применить параметры к ноде
+butAppNode.addEventListener('click', ApplaySettingNode);
 
 function ApplaySettingNode() {
   if (selectStart) {
@@ -447,6 +438,13 @@ function ApplaySettingNode() {
         node.attr('label/font-size', sizeFront);
         node.attr('label/text', NodeSpace.setting.key);
       };
+      if (NodeSpace.type === 1) {
+        const node = graph.getCell(NodeSpace.id);
+        let symbol = '';
+        if (NodeSpace.setting.feedback == 1) symbol = '⟲';
+        node.attr('label/font-size', 15);
+        node.attr('label/text', symbol);
+      };
 
       StopSpace();
       StopRender();
@@ -455,49 +453,41 @@ function ApplaySettingNode() {
   }
 };
 
+///////////////////////Применить настройки связей
 function getLinkSettingEditor() {
-      let weight;
-      let delay;
+      let weight = 0;
       switch (linkType){
         case 1:
         case 2:
-          weight = parseFloat(inpWeight.value);
-          delay = parseFloat(inpDelay.value);          
-          linkSetting = { weight, delay };               
-          break;
         case 3:
-          delay = parseFloat(inpDelay.value);
-          linkSetting = { delay }; 
+          weight = parseFloat(inpWeight.value); 
+          linkSetting = { weight }; 
           break;
         case 4:
           weight = parseFloat(inpWeight.value);
-          delay = parseFloat(inpDelay.value);
-          let weightMax = parseFloat(inpWeightMax.value);
-          let weightMin = parseFloat(inpWeightMin.value);
-          let timeBefore = parseFloat(inpTimeBefore.value);
-          let timeAfter = parseFloat(inpTimeAfter.value);
-          let weightUp = parseFloat(inpWeightUp.value);
-          let weightDown = parseFloat(inpWeightDown.value);
-          let plasticity = parseFloat(inpPlasticity.value);
-          let memoryTime = parseFloat(inpMemoryTime.value);
-          linkSetting = { weight, delay, weightMax, weightMin, timeBefore, timeAfter, weightUp,
-            weightDown, plasticity, memoryTime };
+          const weightMax = parseFloat(inpWeightMax.value);
+          const weightMin = parseFloat(inpWeightMin.value);
+          const thresholdFrom = parseFloat(inpthresholdFrom.value);
+          const thresholdTo = parseFloat(inpthresholdTo.value);
+          const trackUp = parseFloat(inptrackUp.value);
+          const trackDown = parseFloat(inptrackDown.value);
+          const rate = parseFloat(inprate.value);
+          const degradation = parseFloat(inpdegradation.value);
+          const plasticity = parseFloat(inpPlasticity.value);
+          linkSetting = { weight, weightMax, weightMin, thresholdFrom, thresholdTo, trackUp, trackDown, rate, degradation, plasticity };
           break;
       }
 };
 
+///////////////////////Применить настройки нод
 function getNodeSettingEditor() {
   if (nodeType === 1) {
-    const threshold = parseFloat(inpThreshold.value);
-    const thresholdMax = parseFloat(inpThresholdMax.value);
-    const thresholdMin = parseFloat(inpThresholdMin.value);
-    const levelMax = parseFloat(inpLevelMax.value);
-    const levelMin = parseFloat(inpLevelMin.value);
-    const levelLeak = parseFloat(inpLevelLeak.value);
-    const refractoryPeriod = parseFloat(inpRefractoryPeriod.value);
-    const modulationLeak = parseFloat(inpModulationLeak.value);
-    NodeSetting = {threshold, thresholdMax, thresholdMin, levelMax, levelMin, levelLeak,
-      refractoryPeriod, modulationLeak };
+    const sensitivity = parseFloat(inpSensitivity.value);
+    const toplevel = parseFloat(inptoplevel.value);
+    const lowerlevel = parseFloat(inplowerlevel.value);
+    const feedback = inpfeedback.checked ? 1 : 0;
+    const weight = parseFloat(inpweightnode.value);;
+    NodeSetting = {sensitivity, toplevel, lowerlevel, feedback, weight };
   };
 
   if (nodeType === 2) {
@@ -517,7 +507,7 @@ function getNodeSettingEditor() {
 };
 
 
-
+/////////////////При редактировании сторок ввода цифровых
 inputFields.forEach(inputField => {
   let mem = '';
 
@@ -555,6 +545,11 @@ inputFields.forEach(inputField => {
   });
 });
 
+inpfeedback.addEventListener("change", () => {
+  getNodeSettingEditor();
+  ApplaySettingNode(); 
+});
+
 
 function handleKeyDown(event) {
   event.preventDefault(); 
@@ -575,57 +570,28 @@ function handleKeyDown(event) {
 
 btnPlay.addEventListener('click',  async () =>{
   if (playing){
-    StopSpace();
     StopRender();
+    StopSpace();
     btnPlay.children[0].src = "img/play.png"; 
   } else {
-    await StartSpace();
+    StartSpace();
     StartRender();
     btnPlay.children[0].src = "img/stop.png";
   }
 });
 
-function getColor(startColor, endColor, f) {
-  const startRGB = hexToRGB(startColor);
-  const endRGB = hexToRGB(endColor);
-  const colorDiff = [
-    endRGB[0] - startRGB[0],
-    endRGB[1] - startRGB[1],
-    endRGB[2] - startRGB[2]
-  ];
-  const r = Math.round(startRGB[0] + colorDiff[0] * f);
-  const g = Math.round(startRGB[1] + colorDiff[1] * f);
-  const b = Math.round(startRGB[2] + colorDiff[2] * f);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-function hexToRGB(hex) {
-  const r = parseInt(hex.substring(1, 3), 16);
-  const g = parseInt(hex.substring(3, 5), 16);
-  const b = parseInt(hex.substring(5, 7), 16);
-  return [r, g, b];
-}
 
 var renderId;
 var tickinId;
-var tokens = [];
-
 var nodegraph = [];
 
 
 async function tactRender() {
 
-  if ((fireNode == undefined) || (renderspike == undefined)) {
-    renderId = setTimeout(tactRender, 60);
-    return;
-  }
-
-
   space.nodes.forEach((element, index) => {
     const node = nodegraph[index];
-    let color = '#383838';
-    if (fireNode[index * 4] > 80) color = '#ffff00'
-    node.attr('body/fill', color);
+    const r = NodeState[index][0] * 199 + 56;
+    node.attr('body/fill', `rgb(${r}, ${r}, 56)`);
   });
 
 
@@ -633,41 +599,16 @@ async function tactRender() {
     const NodeSpace = space.nodes.find(N => N.id === selectStart.model.id);
     if (NodeSpace.type === 1) {
       let index = space.nodes.indexOf(NodeSpace);
-      labelLevel.textContent = fireNode[index * 4 + 1].toFixed(2);;
-      labelThreshold.textContent = fireNode[index * 4 + 2].toFixed(2);
-      labelRest.textContent = fireNode[index * 4 + 3];
+      labeloutput.textContent = NodeState[index][0].toFixed(2);
+      labelsensitivity.textContent = NodeState[index][1].toFixed(2);
     };
   } else {
-    labelLevel.textContent = '_';
-    labelThreshold.textContent = '_';
-    labelRest.textContent = '_';
+    labeloutput.textContent = '_';
+    labelsensitivity.textContent = '_';
   };
 
   labelTime.textContent = 'Time tick: ' + timeDiff + ' mc';
 
-  ////////////////Spiks Visual////////////////////
-  if (VisSpike){
-
-    for (let i = 0; i < tokens.length; i++) tokens[i].remove();
-    tokens.slice(0);
-
-    renderspike.forEach((element, index) => {
-      if (index % 32 == 0) return;
-      const index_link = Math.floor(index / 32);   
-        if ((element > 1) && (index_link < space.links.length)) {
-          const link = graph.getCell(space.links[index_link].id);
-          var linkView = paper.findViewByModel(link);
-          const point = linkView.getPointAtRatio(1 - element/arrLinkData[index_link][2]);
-          var token = V('circle', { r: 3, fill: '#ffff00' });
-          token.translate(point.x, point.y);
-          V(paper.cells).append(token);
-          tokens.push(token);
-        };
-    });
-  };
-
-
-  ////////////////////////////////////////////////
   renderId = setTimeout(tactRender, 60);
 };
 
@@ -676,10 +617,9 @@ let sensors = {};
 
 function inputOutput (){
 
-  if (fireNode.length == 0) return;
 
   for (let node in actuators) {
-    actuators[node].value = fireNode[actuators[node].index * 4];
+    actuators[node].value = NodeState[actuators[node].index][0];
   };
 
   localStorage.setItem("actuators", JSON.stringify(actuators));
@@ -688,19 +628,16 @@ function inputOutput (){
   if (sensors === null) return;
   
   for (let node in sensors) {
-    const index = arrSensor[0].indexOf(node)
+    const index = arrSensor[1].indexOf(node)
     if (index === -1) continue;
-    if (sensors[node] === 0) continue;
-    FireSensor(index);
-    sensors[node] = 0;   
-    localStorage.setItem("sensors", JSON.stringify(sensors)); 
+    if (key_down != node) FireSensor(index, sensors[node]);
   };
 
 };
 
 function StartRender() {
   renderId = setTimeout(tactRender, 100);
-  tickinId = setInterval(inputOutput, 21);
+  tickinId = setInterval(inputOutput, 100);
 
   actuators = {};
   sensors = {};
@@ -712,11 +649,15 @@ function StartRender() {
         actuators[id] = {value: 0, index: index};
       };
     };
+
+    if (node.type === 3) {
+      const id = node.setting.id;
+      if (id !== '') {
+        sensors[id] = 0;
+      };
+    };
   });
 
-  arrSensor[0].forEach(key => {
-    sensors[key] = 0;
-  });
 
   localStorage.setItem("sensors", JSON.stringify(sensors));
 
@@ -727,42 +668,42 @@ function StopRender() {
   clearInterval(renderId);
   clearInterval(tickinId);
   
-  const nodes = graph.getElements();
-  nodes.forEach(node => {
-    node.attr('body/fill', '#383838')
+  space.nodes.forEach((element, index) => {
+    const node = nodegraph[index];
+    if (node != undefined) node.attr('body/fill', `rgb(56, 56, 56)`);
   });
 
 
-  for (let i = 0; i < tokens.length; i++) tokens[i].remove();
-  tokens.slice(0);
-
-  labelLevel.textContent = '_';
-  labelThreshold.textContent = '_';
-  labelRest.textContent = '_';
+  labeloutput.textContent = '_';
+  labelsensitivity.textContent = '_';
 
   labelTime.textContent = 'Time tick: -- mc';
-
 };
 
+let keyDownTimer = null;
 
-document.addEventListener('keydown', event => {
-  if (playing) {
+function handleKeyDown(event) {
+  key_down = event.key;
     arrSensor[0].forEach((key, index) => {
       if (key === event.key) {
         FireSensor(index);
       }
-    });
+  });
+}
+
+document.addEventListener('keydown', event => {
+  if (playing && keyDownTimer === null) {
+    //handleKeyDown(event);
+    keyDownTimer = setInterval(() => {
+      handleKeyDown(event);
+    }, 100);
   }
 });
 
-switchVisSpike.addEventListener("change", function() {
-  if (this.checked) {
-    VisSpike = true;
-  } else {
-    VisSpike = false;
-    for (let i = 0; i < tokens.length; i++) tokens[i].remove();
-    tokens.slice(0);
-  }
+document.addEventListener('keyup', event => {
+  key_down = '';
+  clearInterval(keyDownTimer);
+  keyDownTimer = null;
 });
 
 
@@ -771,6 +712,14 @@ openWin.addEventListener ('change', (event) => {
   const nameValue = event.target.value;
   if (nameValue === "null") return;
   
-  window.open('./win/'+ nameValue + '.html', 'new_tab');
+  const childWindow = window.open('./win/'+ nameValue + '.html', 'new_tab');
+  var timer = setInterval(function() {
+    if (childWindow.closed) {
+      clearInterval(timer);
+      Object.keys(sensors).forEach(item => { sensors[item] = 0; });
+      localStorage.setItem("sensors", JSON.stringify(sensors))
+    }
+  }, 500);
+
   event.target.selectedIndex = 0;
 });

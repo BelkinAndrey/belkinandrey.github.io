@@ -1,3 +1,3 @@
 # belkinandrey.github.io
-Редактор FLUX
+Редактор cogFLUX
 https://belkinandrey.github.io/

@@ -258,6 +258,10 @@ select:focus {
   display: none;
 }
 
+.input-container hr{
+  background-color: #757575; height: 1px; width: 80%; border: none;
+}
+
 
 .input-container.open {
     display: block;
@@ -291,6 +295,10 @@ select:focus {
 
   }
 
+  .input-checkbox {
+    margin: 2px 2px 2px 2px;
+  }
+
 
 .input-field:focus {
     background-color: #25232f;
@@ -302,6 +310,8 @@ select:focus {
 .input-container-link{
   display: none;
 }
+
+
 
 .input-container-link.open {
   display: block;

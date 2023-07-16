@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>cogFlux</title>
+    <link rel="stylesheet" type="text/css" href="css/editor.css">
+    <link rel="stylesheet" type="text/css" href="css/social.css">
+    <link rel="stylesheet" type="text/css" href="joint/joint.css">
+    <script src="./data/neurons_for_test_1.json"></script>
+    <script src="./data/rotation.json"></script>
+    <script src="./data/neurons_2.json"></script>
+    <script src="./data/neurons_3.json"></script>
+</head>
+<body>
+    
+  
+    <script>
+      SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function (toElement) {
+        return toElement.getScreenCTM().inverse().multiply(this.getScreenCTM());
+      };
+    </script>
+
+    
+    <div class="top">
+      <div class="logo">
+        <img src="img/logo.png" alt="Logo">
+        <div style="color: red;">Spike</div>
+        <div class="button-play">
+          <button id="play-stop-btn">
+            <img src="img/play.png" alt="Play/Stop">
+          </button>
+        </div>
+      </div>      
+      <div class="button-top">
+        <button id="remove-all-btn">
+          <img src="img/clean.png" alt="RemoveAll">
+        </button>
+        <button id="save-btn">
+          <img src="img/download.png" alt="Save">
+        </button>
+        <button id="open-btn">
+          <img src="img/open.png" alt="Open">
+        </button>
+        <select id="select-file">
+          <option value="null" disabled selected>Load..</option>
+          <option value="neurons_for_test_1">neurons_for_test_1</option>
+          <option value="neurons_2">neurons_2</option>
+          <option value="neurons_3">neurons_3</option>
+          <option value="rotation">rotation</option>
+        </select>
+        <select id="open-windows">
+          <option value="null" disabled selected>Open window..</option>
+          <option value="test_1">Test_1</option>
+          <option value="test_1_for_unity/index">Test_1_for_unity</option>
+        </select>
+      </div>
+    </div>
+    <div class="left" style="width: 200px">
+      <ul id="node-list">
+      </ul>
+    </div>
+    <div class="center">
+      <div id="paper" class="paper"></div>
+    </div>
+    <div class="right" style="width: 340px">
+      <div class="setting">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <b id='node-label' style="margin-right: auto; margin-left: 2px;">Node</b>
+          <div >
+            <button id="button-default-node">default</button>
+            <button id="button-applay-node">Applay</button>
+          </div>
+        </div>
+        <div>
+          <div class="switch">
+            <label>
+              <input type="radio" name="node-type" value="1" checked>
+              <div class="option">
+                <img src="img/image5.png" alt="neuron">
+                <span class="label-text">neuron</span>
+              </div>
+            </label>
+            <label>
+              <input type="radio" name="node-type" value="2">
+              <div class="option">
+                <img src="img/image6.png" alt="actuator">
+                <span class="label-text">actuator</span>
+              </div>
+            </label>
+            <label>
+              <input type="radio" name="node-type" value="3">
+              <div class="option">
+                <img src="img/image7.png" alt="sensor">
+                <span class="label-text">sensor</span>
+              </div>
+            </label>
+            <label>
+              <input type="radio" name="node-type" value="4">
+              <div class="option">
+                <img src="img/image8.png" alt="module">
+                <span class="label-text">module</span>
+              </div>
+            </label>
+          </div>
+          <div>
+            <div class="input-container" data-value="4">
+              <label class="input-label" style="color: red;">does not work!</label>
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">level:</label>
+              <label class="output-label" id="level-output">_</label>
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">threshold:</label>
+              <label class="output-label"  id="threshold-output">_</label>
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">rest time:</label>
+              <label class="output-label"  id="rest-time-output">_</label>
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">threshold:</label>
+              <input type="number" id="threshold-input" class="input-field" placeholder="0" value="10">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">threshold-max:</label>
+              <input type="number" id="threshold-max-input" class="input-field" placeholder="0" value="100" min="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">threshold-min:</label>
+              <input type="number" id="threshold-min-input" class="input-field" placeholder="0" value="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">level-max:</label>
+              <input type="number" id="level-max-input" class="input-field" placeholder="0" value="200" min="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">level-min:</label>
+              <input type="number" id="level-min-input" class="input-field" placeholder="0" value="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">level-leak:</label>
+              <input type="number" id="level-leak-input" class="input-field" placeholder="0" value="1" min="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">refractory period:</label>
+              <input type="number" id="refractory-period-input" class="input-field" placeholder="0" value="0" min="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container open" data-value="1">
+              <label class="input-label">modulation leak:</label>
+              <input type="number" id="modulation-leak-input" class="input-field" placeholder="0" value="0" min="0" pattern="[0-9]+">
+            </div>
+            <div class="input-container" data-value="3">
+              <label class="input-label">key action:</label>
+              <input type="text" id="key-input" class="input-field" value="" onkeydown="return handleKeyDown(event)">
+            </div>
+            <div class="input-container" data-value="2,3">
+              <label class="input-label">id:</label>
+              <input type="text" id="id-input" class="input-field" value="">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="setting">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <b id="link-label" style="margin-right: auto; margin-left: 2px;">Link</b>
+          <div >
+            <button id="button-default-link">default</button>
+            <button id="button-applay-link">Applay</button>
+          </div>
+        </div>
+        <div class="switch">
+          <label>
+            <input type="radio" name="link-type" value="1" checked>
+            <div class="option">
+              <img src="img/image1.png" alt="direct">
+              <span class="label-text">direct</span>
+            </div>
+          </label>
+          <label>
+            <input type="radio" name="link-type" value="2">
+            <div class="option">
+              <img src="img/image2.png" alt="modulating">
+              <span class="label-text">modulating</span>
+            </div>
+          </label>
+          <label>
+            <input type="radio" name="link-type" value="3">
+            <div class="option">
+              <img src="img/image3.png" alt="electrical">
+              <span class="label-text">electrical</span>
+            </div>
+          </label>
+          <label>
+            <input type="radio" name="link-type" value="4">
+            <div class="option">
+              <img src="img/image4.png" alt="hebb">
+              <span class="label-text">hebb</span>
+            </div>
+          </label>
+        </div>
+        <div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label" style="color: red;">does not work!</label>
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">weight:</label>
+            <label class="output-label" id="weight-output">_</label>
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">target weight:</label>
+            <label class="output-label" id="target-weight-output">_</label>
+          </div>
+          <div class="input-container-link open" data-value="1,2,4">
+            <label class="input-label">weight:</label>
+            <input type="number" id="weight-input" class="input-field" placeholder="10" value="10">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">weight-max:</label>
+            <input type="number" id="weight-max-input" class="input-field" placeholder="100" value="100">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">weight-min:</label>
+            <input type="number" id="weight-min-input" class="input-field" placeholder="-100" value="-100">
+          </div>
+          <div class="input-container-link open" data-value="1,2,3,4">
+            <label class="input-label">delay:</label>
+            <input type="number" id="delay-input" class="input-field" placeholder="0" value="0" min="0">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">time before:</label>
+            <input type="number" id="time-before-input" class="input-field" placeholder="1" value="1">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">time after:</label>
+            <input type="number" id="time-after-input" class="input-field" placeholder="1" value="1">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">weight-up:</label>
+            <input type="number" id="weight-up-input" class="input-field" placeholder="0.1" value="0.1">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">weight-down:</label>
+            <input type="number" id="weight-down-input" class="input-field" placeholder="0.001" value="0.001">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">plasticity:</label>
+            <input type="number" id="plasticity-input" class="input-field" placeholder="1" value="1">
+          </div>
+          <div class="input-container-link" data-value="4">
+            <label class="input-label">memory time:</label>
+            <input type="number" id="memory-time-input" class="input-field" placeholder="1000000" value="1000000">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom"> 
+      <div class="button-bottom">
+        <div id="label-time" style="width: 150px; word-wrap: break-word; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Time tick: -- mc</div>
+        <div>Spike Visualization:</div>
+        <label class="chec">
+          <input type="checkbox" id="VisSpike" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="button-social">
+      <div class="social github">
+        <a href="https://github.com/BelkinAndrey/belkinandrey.github.io" target="_blank"><i class="fab fa-github fa-2x"></i></a>
+      </div>
+      <div class="social youtube">
+        <a href="https://youtube.com/@it.belkin/videos" target="_blank"><i class="fab fa-youtube fa-2x"></i></a>
+      </div>
+      <div class="social vk">
+        <a href="https://vk.com/club137626673" target="_blank"><i class="fab fa-vk fa-2x"></i></a>    
+      </div>
+      <div class="social twitter">
+        <a href="https://twitter.com/it_belkin" target="_blank"><i class="fab fa-twitter fa-2x"></i></a>
+      </div>
+      <div class="social telegram">
+        <a href="https://telegram.me/neuro_cyber" target="_blank"><i class="fa fa-paper-plane fa-2x"></i></a>
+       </div>
+       <div class="social medium">
+        <a href="https://medium.com/@it.belkin" target="_blank"><svg width="22px" height="22px" viewBox="0 -55 256 256"  preserveAspectRatio="xMidYMid" fill="#ffffff" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M72.2009141,1.42108547e-14 C112.076502,1.42108547e-14 144.399375,32.5485469 144.399375,72.6964154 C144.399375,112.844284 112.074049,145.390378 72.2009141,145.390378 C32.327779,145.390378 0,112.844284 0,72.6964154 C0,32.5485469 32.325326,1.42108547e-14 72.2009141,1.42108547e-14 Z M187.500628,4.25836743 C207.438422,4.25836743 223.601085,34.8960455 223.601085,72.6964154 L223.603538,72.6964154 C223.603538,110.486973 207.440875,141.134463 187.503081,141.134463 C167.565287,141.134463 151.402624,110.486973 151.402624,72.6964154 C151.402624,34.9058574 167.562834,4.25836743 187.500628,4.25836743 Z M243.303393,11.3867175 C250.314,11.3867175 256,38.835526 256,72.6964154 C256,106.547493 250.316453,134.006113 243.303393,134.006113 C236.290333,134.006113 230.609239,106.554852 230.609239,72.6964154 C230.609239,38.837979 236.292786,11.3867175 243.303393,11.3867175 Z"> </path> </g> </g></svg></a> 
+       </div>
+       <div class="social habr">
+        <a href="https://habr.com/ru/users/aigame/posts/" target="_blank"><svg width="22px" height="22px" viewBox="0 0 24.00 24.00" role="img" stroke="#000000" stroke-width="0.00024000000000000003"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M0 0v24h24V0zm7.025 4h1.633c1.219 0 1.64.029 1.668.113.019.066.028 1.369.028 2.897l-.008 2.783.476-.422c.657-.581 1.212-.787 2.262-.824.694-.019.973.009 1.46.178 1.06.356 1.81 1.087 2.204 2.166.15.421.17.863.197 4.285l.03 3.824h-3.338v-3.121c0-3.075-.01-3.113-.217-3.488-.29-.497-.609-.722-1.106-.778-.853-.093-1.443.197-1.78.89-.16.32-.179.656-.188 3.356-.01 1.65-.03 3.03-.03 3.067-.008.047-.75.074-1.65.074h-1.64v-7.5z"></path></g></svg></a>
+       </div>
+       <div class="social flux">
+        <a href="https://fluxengine.ai/" target="_blank">fluxengine.ai</a>
+      </div>
+      </div>
+      <div style="margin-right: 10px;">version: 0.2023.07.06</div>
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.4.1/backbone.js"></script>
+    <script src="./joint/joint.js"></script>
+
+    <script src="src/spaceNeuron.js"></script> 
+    <script src="src/controller.js"></script>
+    <script src="src/controllers/edit-controller.js"></script>
+    <script src="src/controllers/view-controller.js"></script>
+    <script src="src/editor.js"></script>
+    <script src="src/main.js"></script>
+    
+
+    <!--Скрипт для загрузки файлов-->
+    <script>
+      const selectFile = document.getElementById('select-file');
+      const fileList = { neurons_for_test_1, neurons_2, neurons_3, rotation };
+      selectFile.addEventListener('change', (event) => {
+        const nameValue = event.target.value;
+        RemoveAll();
+        graph.clear();
+        space = fileList[nameValue];
+        localStorage.setItem('space', JSON.stringify(space));
+        StartLoad();
+        reFreshInspector();
+        selectFile.value = 'null';
+        selectFile.children[0].innerHTML = nameValue;
+        radioNode[nodeType - 1].checked = true;
+        changeRadioNode();
+
+        showAll();
+        StopSpace();
+        StopRender();
+        btnPlay.children[0].src = "img/play.png"; 
+      });
+    </script>
+</body>
+</html>
