@@ -142,23 +142,26 @@
 
         function updata () {
             const data = JSON.parse(localStorage.getItem('actuators'));
-			let sensordata = JSON.parse(localStorage.getItem('sensors'));
+			let sensordata = {};
 
-            if (data === null) return;
-            for (let i = 0; i < actuators.length; i++) {
-                const id = actuators[i].querySelector('.input').value;
-                if (data[id] === undefined) return;
-                const val = data[id].value * 94 + 161;
-				const val2 = 161 - data[id].value * 161;
-                actuators[i].querySelector('.indicator').style.backgroundColor = `rgb(${val}, ${val2}, ${val2})`;
-            };
-
-			if (sensordata === null) return;
+            if (data !== null) {
+            	for (let i = 0; i < actuators.length; i++) {
+                	const id = actuators[i].querySelector('.input').value;
+                	if (data[id] !== undefined) {
+                		const val = data[id].value * 94 + 161;
+						const val2 = 161 - data[id].value * 161;
+                		actuators[i].querySelector('.indicator').style.backgroundColor = `rgb(${val}, ${val2}, ${val2})`;
+					}
+            	};
+			};
+           
+			
 			for (let i = 0; i < sensors.length; i++) {
 				const id = sensors[i].querySelector('.input').value;
 				sensordata[id] = arr[i];
 			};
 			localStorage.setItem("sensors", JSON.stringify(sensordata));
+
         };
 
         const IntervalId = setInterval(updata, 51);

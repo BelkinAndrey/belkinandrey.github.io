@@ -134,7 +134,7 @@ async function initialization() {
         for (let i = 0; i < dataNode[this.thread.x][6]; i++){
             let index1 = i + dataNode[this.thread.x][7];
             let index2 = dataLink[index1][0];
-            let f = inp[index2] + stat[index2][0];
+            let f = stat[index2][0]; 
             f = Math.min(f, 1);
             if (dataLink[index1][2] == 1 || dataLink[index1][2] == 4){
                 out += dataLink[index1][3] * f; 

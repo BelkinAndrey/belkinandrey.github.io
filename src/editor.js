@@ -626,13 +626,12 @@ function inputOutput (){
 
   let sensors = JSON.parse(localStorage.getItem('sensors'));
   if (sensors === null) return;
-  
-  for (let node in sensors) {
-    const index = arrSensor[1].indexOf(node)
-    if (index === -1) continue;
-    if (key_down != node) FireSensor(index, sensors[node]);
-  };
 
+  arrSensor[0].forEach((key, index) => {
+    if (key !== key_down) {
+      FireSensor(index, sensors[arrSensor[1][index]]);
+    }
+  });
 };
 
 function StartRender() {
@@ -693,7 +692,7 @@ function handleKeyDown(event) {
 
 document.addEventListener('keydown', event => {
   if (playing && keyDownTimer === null) {
-    //handleKeyDown(event);
+    handleKeyDown(event);
     keyDownTimer = setInterval(() => {
       handleKeyDown(event);
     }, 100);
@@ -718,6 +717,7 @@ openWin.addEventListener ('change', (event) => {
       clearInterval(timer);
       Object.keys(sensors).forEach(item => { sensors[item] = 0; });
       localStorage.setItem("sensors", JSON.stringify(sensors))
+      console.log(' close');
     }
   }, 500);
 
