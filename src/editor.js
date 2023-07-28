@@ -628,8 +628,10 @@ function inputOutput (){
   if (sensors === null) return;
 
   arrSensor[0].forEach((key, index) => {
-    if (key !== key_down) {
-      FireSensor(index, sensors[arrSensor[1][index]]);
+    if (key !== key_down && key !== '') {
+      if (sensors[arrSensor[1][index]] !== undefined) { 
+        FireSensor(index, sensors[arrSensor[1][index]]);
+      };
     }
   });
 };
@@ -681,7 +683,7 @@ function StopRender() {
 
 let keyDownTimer = null;
 
-function handleKeyDown(event) {
+function KeyDown(event) {
   key_down = event.key;
     arrSensor[0].forEach((key, index) => {
       if (key === event.key) {
@@ -692,9 +694,9 @@ function handleKeyDown(event) {
 
 document.addEventListener('keydown', event => {
   if (playing && keyDownTimer === null) {
-    handleKeyDown(event);
+    KeyDown(event);
     keyDownTimer = setInterval(() => {
-      handleKeyDown(event);
+      KeyDown(event);
     }, 100);
   }
 });
