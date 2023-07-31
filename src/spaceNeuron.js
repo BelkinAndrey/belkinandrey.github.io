@@ -120,13 +120,6 @@ async function initialization() {
     });
 
     NodeState = Array.from({ length: space.nodes.length }, () => Array(2).fill(0));
-
-    /*NodeState.forEach((item, index) => {
-        item[0] = 0;                       //output
-        item[1] = 0;                       //sensitivity
-    });*/
-
-    /////////////////////////////////////////////////////////////////////////////////
     
     kernelNode = gpu.createKernel(function(stat, inp, dataNode, dataLink) {
         let out = 0;
@@ -173,7 +166,7 @@ async function tact() {
   insensor.fill(0); 
 
   loopTimes = 1 - loopTimes;
-  intervalID = setTimeout(tact, 100);
+  intervalID = setTimeout(tact, 50);
 };
 
 
