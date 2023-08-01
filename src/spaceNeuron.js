@@ -166,7 +166,7 @@ async function tact() {
   insensor.fill(0); 
 
   loopTimes = 1 - loopTimes;
-  intervalID = setTimeout(tact, 50);
+  intervalID = setTimeout(tact, 100);
 };
 
 

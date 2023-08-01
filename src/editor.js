@@ -637,7 +637,7 @@ function inputOutput (){
 };
 
 function StartRender() {
-  renderId = setTimeout(tactRender, 100);
+  renderId = setTimeout(tactRender, 101);
   tickinId = setInterval(inputOutput, 46);
 
   actuators = {};
