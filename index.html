@@ -12,6 +12,7 @@
     <script src="./data/hbx_1_3.json"></script>
     <script src="./data/hbx_1_4.json"></script>
     <script src="./data/hbx_1_5.json"></script>
+    <script src="./data/hbx_1_6.json"></script>
     <script src="./data/rotation.json"></script>
     <script src="./data/place_cells.json"></script>
 </head>
@@ -53,6 +54,7 @@
           <option value="hbx_1_3">hbx_1_3</option>
           <option value="hbx_1_4">hbx_1_4</option>
           <option value="hbx_1_5">hbx_1_5</option>
+          <option value="hbx_1_6">hbx_1_6</option>
           <option value="rotation">rotation</option>
           <option value="place_cells">place_cells</option>
         </select>
@@ -286,7 +288,7 @@
         <a href="https://fluxengine.ai/" target="_blank">fluxengine.ai</a>
       </div>
       </div>
-      <div style="margin-right: 10px;">version: 0.2023.08.04</div>
+      <div style="margin-right: 10px;">version: 0.2023.08.06</div>
     </div>
 
 
@@ -308,7 +310,8 @@
     <!--Скрипт для загрузки файлов-->
     <script>
       const selectFile = document.getElementById('select-file');
-      const fileList = { neurons_for_test_1, hbx_1_1, hbx_1_2, hbx_1_3, hbx_1_4, hbx_1_5, rotation, place_cells };
+      const fileList = { neurons_for_test_1, hbx_1_1, hbx_1_2, hbx_1_3, 
+                          hbx_1_4, hbx_1_5, hbx_1_6, rotation, place_cells };
       selectFile.addEventListener('change', (event) => {
         const nameValue = event.target.value;
         RemoveAll();
