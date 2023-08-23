@@ -1,4 +1,6 @@
 const btnPlay = document.getElementById('play-stop-btn');                 //Кнопка плей/стоп
+const btnLearn = document.getElementById('learning-btn');                 //Кнопка применить обучение
+const btndivLearn = document.getElementById('button-learning');           //Для изменния видимости кнопки применить обучение
 const leftPanel = document.querySelector('.left');                        //левая панель
 const rightPanel = document.querySelector('.right');                      //правая панель
 const RemoveAllButton = document.getElementById("remove-all-btn");        //кнопка очистить всё
@@ -18,21 +20,28 @@ const butAppNode = document.getElementById('button-applay-node');         //Кн
 const inpWeight = document.getElementById('weight-input');                //Строка ввода значение веса для связи
 const inpWeightMax = document.getElementById('weight-max-input');         //Строка ввода максимальный вес для хебба
 const inpWeightMin = document.getElementById('weight-min-input');         //Строка ввода минимальный вес для хебба
-const inpthresholdFrom = document.getElementById('threshold-from-input'); //Строка ввода уровень активности для источника
-const inpthresholdTo = document.getElementById('threshold-to-input');     //Строка ввода уровень активности для цели
+const inpTrack = document.getElementById('track-start-input');            //Строка ввода стартового следа
 const inptrackUp = document.getElementById('track-up-input');             //Строка ввода значение увеличение следа
 const inptrackDown = document.getElementById('track-down-input');         //Строка ввода значение снижения следа
 const inprate = document.getElementById('rate-input');                    //Строка ввода награда
-const inpdegradation = document.getElementById('degradation-input');      //Строка ввода деградации
-const inpPlasticity = document.getElementById('plasticity-input');        //Строка ввода пластичность для хебба
+const inpPrion = document.getElementById('prion-input');                  //Строка ввода утечка прионов
+const inpBorder = document.getElementById('border-input');                //Строка ввода границы
+const inpDegradation = document.getElementById('degradation-input');      //Строка ввода деградации
+const labelWeight = document.getElementById('weight-output');             //Метка веса
+const labelTarget = document.getElementById('target-weight-output');      //Метка целевого веса
+const labelTrack = document.getElementById('track-output');               //Метка следа
+
+
 
 const labeloutput = document.getElementById('output-output');             //Метка выхода
 const labelsensitivity = document.getElementById('sensitivity-output');   //Метка чувствительности
+const labelplasticity = document.getElementById('plasticity-output');     //Метка пластичности
 const inpSensitivity = document.getElementById('sensitivity-input');      //Строка ввода чувствительность
 const inptoplevel = document.getElementById('top-level-input');           //Строка ввода верхни предел уровня
 const inplowerlevel = document.getElementById('lower-level-input');       //Строка ввода нижний предел уровня
 const inpfeedback = document.getElementById('feedback-input');            //Галочка есть ли обратная связь
 const inpweightnode = document.getElementById('weight-node-input');       //Строка ввода вес обратной связи
+const inpPlasticity = document.getElementById('node-plasticity');         //Строка ввода пластичность для ноды
 const inpKey = document.getElementById('key-input');                      //Строка ввода клавиши для ноды
 const inpId = document.getElementById('id-input');                        //Строка ввода id для ноды
 
@@ -317,15 +326,18 @@ butDefLink.addEventListener('click', SetDefaultLink);
 function SetDefaultLink() {
 
   inpWeight.value = LinkDefault.direct.weight.toString();
-  inpWeightMax.value = LinkDefault.hebb.weightMax.toString();
-  inpWeightMin.value = LinkDefault.hebb.weightMin.toString();
-  inpthresholdFrom.value = LinkDefault.hebb.thresholdFrom.toString();
-  inpthresholdTo.value = LinkDefault.hebb.thresholdTo.toString();
-  inptrackUp.value = LinkDefault.hebb.trackUp.toString();
-  inptrackDown.value = LinkDefault.hebb.trackDown.toString();
-  inprate.value = LinkDefault.hebb.rate.toString();
-  inpdegradation.value = LinkDefault.hebb.degradation.toString();
-  inpPlasticity.value = LinkDefault.hebb.plasticity.toString();
+  inpTrack.value = LinkDefault.hebb.trackStart.toString();
+
+  
+  inpWeightMax.value = net_setting_default.weightMax.toString();
+  inpWeightMin.value = net_setting_default.weightMin.toString();
+  inptrackUp.value = net_setting_default.trackUp.toString();
+  inptrackDown.value = net_setting_default.trackDown.toString();
+  inprate.value = net_setting_default.rate.toString();
+  inpPrion.value = net_setting_default.prion.toString();
+  inpBorder.value = net_setting_default.border.toString();
+  inpDegradation.value = net_setting_default.degradation.toString();
+
 
   if (linkType === 1) linkSetting = LinkDefault.direct;
   if (linkType === 2) linkSetting = LinkDefault.modulating;
@@ -345,6 +357,8 @@ function SetDefaultNode() {
   inplowerlevel.value = NeuronDefault.lowerlevel.toString();
   inpfeedback.checked = NeuronDefault.feedback == 1 ? true : false;
   inpweightnode.value = NeuronDefault.weight.toString();
+  inpPlasticity.value = NeuronDefault.plasticity.toString();
+
   inpKey.value = '';
   inpId.value = '';
 
@@ -364,6 +378,8 @@ function SetSettingNode() {
     inplowerlevel.value = NodeSetting.lowerlevel.toString();
     inpfeedback.checked = NodeSetting.feedback == 1 ? true : false;
     inpweightnode.value = NodeSetting.weight.toString();
+    if (NodeSetting.plasticity == null) inpPlasticity.value = NeuronDefault.plasticity.toString()
+    else inpPlasticity.value = NodeSetting.plasticity.toString();
   };
 
   if (nodeType === 2) {
@@ -376,6 +392,30 @@ function SetSettingNode() {
   };
 }
 
+function SetSettingNet() {
+  if (space.net_setting == null) {
+    inpWeightMax.value = net_setting_default.weightMax.toString();
+    inpWeightMin.value = net_setting_default.weightMin.toString();
+    inptrackUp.value = net_setting_default.trackUp.toString();
+    inptrackDown.value = net_setting_default.trackDown.toString();
+    inprate.value = net_setting_default.rate.toString();
+    inpPrion.value = net_setting_default.prion.toString();
+    inpBorder.value = net_setting_default.border.toString();
+    inpDegradation.value = net_setting_default.degradation.toString();
+  } else {
+    inpWeightMax.value = space.net_setting.weightMax.toString();
+    inpWeightMin.value = space.net_setting.weightMin.toString();
+    inptrackUp.value = space.net_setting.trackUp.toString();
+    inptrackDown.value = space.net_setting.trackDown.toString();
+    inprate.value = space.net_setting.rate.toString();
+    inpPrion.value = space.net_setting.prion.toString();
+    if (space.net_setting.border != null) inpBorder.value = space.net_setting.border.toString();
+    else inpBorder.value = net_setting_default.border.toString();
+    if (space.net_setting.degradation != null) inpDegradation.value = space.net_setting.degradation.toString();
+    else inpDegradation.value = net_setting_default.degradation.toString();
+  }
+};
+
 ////////////////////////Получить настройки выделенной связи
 function SetSettingLink() {
   switch (linkType) {
@@ -386,15 +426,9 @@ function SetSettingLink() {
       break;
     case 4:
       inpWeight.value = linkSetting.weight.toString();
-      inpWeightMax.value = linkSetting.weightMax.toString();
-      inpWeightMin.value = linkSetting.weightMin.toString();
-      inpthresholdFrom.value = linkSetting.thresholdFrom.toString();
-      inpthresholdTo.value = linkSetting.thresholdTo.toString();
-      inptrackUp.value = linkSetting.trackUp.toString();
-      inptrackDown.value = linkSetting.trackDown.toString();
-      inprate.value = linkSetting.rate.toString();
-      inpdegradation.value = linkSetting.degradation.toString();
-      inpPlasticity.value = linkSetting.plasticity.toString();
+      if (linkSetting.trackStart == null) inpTrack.value = LinkDefault.trackStart.toString()
+      else inpTrack.value = linkSetting.trackStart.toString();
+      SetSettingNet();
       break;
   }
 }
@@ -403,6 +437,10 @@ function SetSettingLink() {
 butAppLink.addEventListener('click', ApplaySettingLink);
 
 function ApplaySettingLink() {
+
+  getNetSettingEditor();
+  space.net_setting = netSetting;
+
   if (selectLink) {
     const linkSpace = space.links.find(l => l.id === selectLink.model.id);
     if (linkSpace) {
@@ -412,13 +450,13 @@ function ApplaySettingLink() {
       var link = selectLink.model;
       const color = getColorLink(linkSpace);
       link.attr({ 'line': { stroke: color, targetMarker: { fill: color, stroke: color, } } });
-      localStorage.setItem("space", JSON.stringify(space));
-
-      StopSpace();
-      StopRender();
-      btnPlay.children[0].src = "img/play.png"; 
     }
   }
+
+  localStorage.setItem("space", JSON.stringify(space));
+  StopSpace();
+  StopRender();
+  btnPlay.children[0].src = "img/play.png"; 
 };
 
 /////////////////////Применить параметры к ноде
@@ -453,6 +491,18 @@ function ApplaySettingNode() {
   }
 };
 
+function getNetSettingEditor() {
+  const weightMax = parseFloat(inpWeightMax.value);
+  const weightMin = parseFloat(inpWeightMin.value);
+  const trackUp = parseFloat(inptrackUp.value);
+  const trackDown = parseFloat(inptrackDown.value);
+  const rate = parseFloat(inprate.value);
+  const prion = parseFloat(inpPrion.value);
+  const border = parseFloat(inpBorder.value);
+  const degradation = parseFloat(inpDegradation.value);
+  netSetting = { weightMax, weightMin, trackUp, trackDown, rate, prion, border, degradation };
+} ;
+
 ///////////////////////Применить настройки связей
 function getLinkSettingEditor() {
       let weight = 0;
@@ -465,16 +515,8 @@ function getLinkSettingEditor() {
           break;
         case 4:
           weight = parseFloat(inpWeight.value);
-          const weightMax = parseFloat(inpWeightMax.value);
-          const weightMin = parseFloat(inpWeightMin.value);
-          const thresholdFrom = parseFloat(inpthresholdFrom.value);
-          const thresholdTo = parseFloat(inpthresholdTo.value);
-          const trackUp = parseFloat(inptrackUp.value);
-          const trackDown = parseFloat(inptrackDown.value);
-          const rate = parseFloat(inprate.value);
-          const degradation = parseFloat(inpdegradation.value);
-          const plasticity = parseFloat(inpPlasticity.value);
-          linkSetting = { weight, weightMax, weightMin, thresholdFrom, thresholdTo, trackUp, trackDown, rate, degradation, plasticity };
+          const trackStart = parseFloat(inpTrack.value);
+          linkSetting = { weight, trackStart };
           break;
       }
 };
@@ -486,8 +528,9 @@ function getNodeSettingEditor() {
     const toplevel = parseFloat(inptoplevel.value);
     const lowerlevel = parseFloat(inplowerlevel.value);
     const feedback = inpfeedback.checked ? 1 : 0;
-    const weight = parseFloat(inpweightnode.value);;
-    NodeSetting = {sensitivity, toplevel, lowerlevel, feedback, weight };
+    const weight = parseFloat(inpweightnode.value);
+    const plasticity = parseFloat(inpPlasticity.value);
+    NodeSetting = {sensitivity, toplevel, lowerlevel, feedback, weight, plasticity };
   };
 
   if (nodeType === 2) {
@@ -573,11 +616,19 @@ btnPlay.addEventListener('click',  async () =>{
     StopRender();
     StopSpace();
     btnPlay.children[0].src = "img/play.png"; 
+    btndivLearn.classList.add('open');
   } else {
     StartSpace();
     StartRender();
     btnPlay.children[0].src = "img/stop.png";
+    btndivLearn.classList.remove('open');
   }
+});
+
+btnLearn.addEventListener('click', () => {
+  ApplyLearning();
+  btndivLearn.classList.remove('open');
+  localStorage.setItem("space", JSON.stringify(space));
 });
 
 
@@ -601,10 +652,26 @@ async function tactRender() {
       let index = space.nodes.indexOf(NodeSpace);
       labeloutput.textContent = NodeState[index][0].toFixed(2);
       labelsensitivity.textContent = NodeState[index][1].toFixed(2);
+      labelplasticity.textContent = NodeState[index][2].toFixed(2);
     };
   } else {
     labeloutput.textContent = '_';
     labelsensitivity.textContent = '_';
+    labelplasticity.textContent = '_'; 
+  };
+
+  if (selectLink) {
+    const linkSpace = space.links.find(L => L.id === selectLink.model.id);
+    if (linkSpace.type === 4) {
+      let index = space.links.indexOf(linkSpace);
+      labelWeight.textContent = LinkState[index][0].toFixed(5);
+      labelTarget.textContent = LinkState[index][1].toFixed(5);
+      labelTrack.textContent = LinkState[index][2].toFixed(5);
+    };
+  } else {
+      labelWeight.textContent = '_';
+      labelTarget.textContent = '_';
+      labelTrack.textContent = '_';
   };
 
   labelTime.textContent = 'Time tick: ' + timeDiff + ' mc';
@@ -677,6 +744,11 @@ function StopRender() {
 
   labeloutput.textContent = '_';
   labelsensitivity.textContent = '_';
+  labelplasticity.textContent = '_';
+
+  labelWeight.textContent = '_';
+  labelTarget.textContent = '_';
+  labelTrack.textContent = '_';
 
   labelTime.textContent = 'Time tick: -- mc';
 };

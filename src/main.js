@@ -282,7 +282,8 @@ function getNodeId() {
 }
 
 function RemoveAll() {
-    space = { nodes: [], links: [] };
+    space = { nodes: [], links: [], net_setting: {} };
+    space.net_setting = net_setting_default;
     localStorage.setItem("space", JSON.stringify(space));
     nextId = 1;
     reFreshInspector();
@@ -376,6 +377,11 @@ function StartLoad() {
         const targetNode = link.to;
         createLink(sourceNode, targetNode, getColorLink(link));    
     });
+
+    if (space.net_setting == null) netSetting = net_setting_default
+    else netSetting = space.net_setting;
+    SetSettingNet();
+    
 
     reFreshInspector();
 }
