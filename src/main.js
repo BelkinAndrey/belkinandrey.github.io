@@ -197,7 +197,7 @@ function createSensor (id) {
 function createModule (id) {
     const node = (new joint.shapes.standard.BorderedImage({
         id,
-        size: { width: 150, height: 150 },
+        size: { width: 500, height: 500 },
         z: 1,
         attrs: {
             border: {

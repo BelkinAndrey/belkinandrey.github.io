@@ -16,6 +16,7 @@
     <script src="./data/rotation.json"></script>
     <script src="./data/place_cells.json"></script>
     <script src="./data/training1.json"></script>
+    <script src="./data/worm_1.json"></script>
 </head>
 <body>
     
@@ -63,11 +64,13 @@
           <option value="rotation">rotation</option>
           <option value="place_cells">place_cells</option>
           <option value="training1">training1</option>
+          <option value="worm_1">worm_1</option>
         </select>
         <select id="open-windows">
           <option value="null" disabled selected>Open window..</option>
           <option value="test_1">Test_1</option>
           <option value="bodyHex/index">hex</option>
+          <option value="bodyWorm/index">worm</option>
         </select>
       </div>
     </div>
@@ -119,8 +122,57 @@
             </label>
           </div>
           <div>
-            <div class="input-container" data-value="4">
-              <label class="input-label" style="color: red;">does not work!</label>
+            <div class="input-container" data-value="4ucs">
+              <label class="input-label">type:</label>
+              <select id="select-type-module">
+                <option value="u" selected>unit (1 to 1)</option>
+                <option value="u">unit (N to 1)</option>
+                <option value="u">unit (1 to N)</option>
+                <option value="c">connector</option>
+                <option value="s">static map</option>
+              </select>
+            </div>
+            <div class="input-container" data-value="4u">
+              <label class="input-label">pattern:</label>
+              <select id="select-type-module">
+                <option value="unit" selected>new_pattern</option>
+              </select>
+            </div>
+            <div class="input-container" data-value="4u">
+              <label class="input-label">name pattern:</label>
+              <input type="text" id="name-pattern" class="input-field" value="new_pattern">
+            </div>
+            <div class="input-container" data-value="4u">
+              <label class="input-label">additional input:</label>
+              <select id="total-input">
+                <option value="0" selected>0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+            <div class="input-container" data-value="4u">
+              <label class="input-label">additional output:</label>
+              <select id="total-output">
+                <option value="0" selected>0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+            <div class="input-container" data-value="4us">
+              <label class="input-label">dim:</label>
+              <input type="number" id="dim-input" class="input-field" placeholder="128" value="128">
+            </div>
+            <div class="input-container" data-value="4u" style="justify-content: center">
+              <div >
+                <button id="save-name-btn" style="letter-spacing: 0.05em;">Applay</button>
+                <button id="save-name-btn" style="letter-spacing: 0.05em;">Pattern editor</button>
+              </div>
             </div>
             <div class="input-container open" data-value="1">
               <label class="input-label">output:</label>
@@ -299,7 +351,7 @@
         <a href="https://fluxengine.ai/" target="_blank">fluxengine.ai</a>
       </div>
       </div>
-      <div style="margin-right: 10px;">version: 0.2023.08.23</div>
+      <div style="margin-right: 10px;">version: 0.2023.10.23</div>
     </div>
 
 
@@ -322,7 +374,7 @@
     <script>
       const selectFile = document.getElementById('select-file');
       const fileList = { neurons_for_test_1, hbx_1_1, hbx_1_2, hbx_1_3, 
-                          hbx_1_4, hbx_1_5, hbx_1_6, rotation, place_cells, training1 };
+                          hbx_1_4, hbx_1_5, hbx_1_6, rotation, place_cells, training1, worm_1 };
       selectFile.addEventListener('change', (event) => {
         const nameValue = event.target.value;
         RemoveAll();

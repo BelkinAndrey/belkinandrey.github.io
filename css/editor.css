@@ -78,7 +78,8 @@ html, body {
 }
 
 .top .button-learning button {
-  color: white;
+  font-family: 'Roboto', sans-serif;
+  color: rgb(177, 177, 177);
 }
 
 
@@ -178,7 +179,6 @@ html, body {
     margin-left: auto;
     margin-right: 2px;
     background-color: #1c1a23;
-    padding: 1px;
     color: rgb(177, 177, 177);
     border: 1px solid #535353;
 }
@@ -194,8 +194,8 @@ html, body {
 }
 
 select {
-  min-width: 200px;
-  margin: 5px;
+  min-width: 170px;
+  margin: 3px;
   background-color: #25232f;
   color: #b1b1b1;
 }

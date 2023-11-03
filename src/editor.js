@@ -17,6 +17,8 @@ const butAppLink = document.getElementById('button-applay-link');         //Кн
 const butDefNode = document.getElementById('button-default-node');        //Кнопка по умолчанию для ноды
 const butAppNode = document.getElementById('button-applay-node');         //Кнопка применить для ноды
 
+const seltypemod = document.getElementById('select-type-module');         //Выпадающий список тип модуля
+
 const inpWeight = document.getElementById('weight-input');                //Строка ввода значение веса для связи
 const inpWeightMax = document.getElementById('weight-max-input');         //Строка ввода максимальный вес для хебба
 const inpWeightMin = document.getElementById('weight-min-input');         //Строка ввода минимальный вес для хебба
@@ -296,6 +298,7 @@ function changeRadioLink() {
 }
 
 //////////////////////////Кнопки переключения типов нод
+var moduleType = 'u';
 const divsNode = document.getElementsByClassName('input-container');
 
 radioNode.forEach(radio => {
@@ -307,16 +310,25 @@ radioNode.forEach(radio => {
   });
 });
 
+
 function changeRadioNode() {
   for (var i = 0; i < divsNode.length; i++) {
     var dataValue = divsNode[i].getAttribute('data-value');
     if (dataValue.includes(nodeType)) {
-      divsNode[i].classList.add('open');
+      if ((nodeType != 4) || (dataValue.includes(moduleType))) divsNode[i].classList.add('open');
     } else {
       divsNode[i].classList.remove('open');
     }
   };
 }
+
+seltypemod.addEventListener('change', () => {
+  moduleType = seltypemod.value;
+  for (var i = 0; i < divsNode.length; i++) {
+      divsNode[i].classList.remove('open');
+  };
+  changeRadioNode();
+});
 /////////////////////////
 
 
