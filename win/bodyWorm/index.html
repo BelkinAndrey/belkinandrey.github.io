@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | WebSocket test</title>
+    <title>Unity WebGL Player | Worm</title>
   </head>
   <body style="text-align: center">
     <canvas id="unity-canvas" width=960 height=600 style="width: 100%; height: 100%; background: #231F20"></canvas>
@@ -18,12 +18,12 @@
       }
 
       createUnityInstance(document.querySelector("#unity-canvas"), {
-        dataUrl: "Build/bodyHex.data",
-        frameworkUrl: "Build/bodyHex.framework.js",
-        codeUrl: "Build/bodyHex.wasm",
+        dataUrl: "Build/bodyWorm.data",
+        frameworkUrl: "Build/bodyWorm.framework.js",
+        codeUrl: "Build/bodyWorm.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
-        productName: "WebSocket test",
+        productName: "Worm",
         productVersion: "0.1",
         // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
         // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
