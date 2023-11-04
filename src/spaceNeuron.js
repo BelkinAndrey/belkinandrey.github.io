@@ -232,7 +232,7 @@ async function tact() {
   LinkState = kernelLink(LinkState, settingData, NodeState, LinkData);
 
   loopTimes = 1 - loopTimes;
-  intervalID = setTimeout(tact, 100);
+  intervalID = setTimeout(tact, 10);
 };
 
 

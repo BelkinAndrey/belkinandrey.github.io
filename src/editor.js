@@ -52,7 +52,7 @@ const inputFields = document.querySelectorAll('input.input-field[type="number"]'
 const openWin = document.getElementById('open-windows');                  //Выподающее меню открыть окно
 const labelTime = document.getElementById('label-time');                  //Вывод интервала времени между тактами 
 
-var key_down = '';
+var key_down = null;
 
 /////////////////////Управление боковыми панелями
 let isResizingLeft = false;
@@ -707,7 +707,7 @@ function inputOutput (){
   if (sensors === null) return;
 
   arrSensor[0].forEach((key, index) => {
-    if (key !== key_down && key !== '') {
+    if (key !== key_down) {
       if (sensors[arrSensor[1][index]] !== undefined) { 
         FireSensor(index, sensors[arrSensor[1][index]]);
       };
@@ -717,7 +717,7 @@ function inputOutput (){
 
 function StartRender() {
   renderId = setTimeout(tactRender, 101);
-  tickinId = setInterval(inputOutput, 46);
+  tickinId = setInterval(inputOutput, 5);
 
   actuators = {};
   sensors = {};
@@ -781,12 +781,12 @@ document.addEventListener('keydown', event => {
     KeyDown(event);
     keyDownTimer = setInterval(() => {
       KeyDown(event);
-    }, 100);
+    }, 10);
   }
 });
 
 document.addEventListener('keyup', event => {
-  key_down = '';
+  key_down = null;
   clearInterval(keyDownTimer);
   keyDownTimer = null;
 });
