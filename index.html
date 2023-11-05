@@ -16,7 +16,9 @@
     <script src="./data/rotation.json"></script>
     <script src="./data/place_cells.json"></script>
     <script src="./data/training1.json"></script>
+    <script src="./data/worm_0.json"></script>
     <script src="./data/worm_1.json"></script>
+    <script src="./data/worm_2.json"></script>
 </head>
 <body>
     
@@ -64,7 +66,9 @@
           <option value="rotation">rotation</option>
           <option value="place_cells">place_cells</option>
           <option value="training1">training1</option>
+          <option value="worm_0">worm_0</option>
           <option value="worm_1">worm_1</option>
+          <option value="worm_2">worm_2</option>
         </select>
         <select id="open-windows">
           <option value="null" disabled selected>Open window..</option>
@@ -374,7 +378,8 @@
     <script>
       const selectFile = document.getElementById('select-file');
       const fileList = { neurons_for_test_1, hbx_1_1, hbx_1_2, hbx_1_3, 
-                          hbx_1_4, hbx_1_5, hbx_1_6, rotation, place_cells, training1, worm_1 };
+                          hbx_1_4, hbx_1_5, hbx_1_6, rotation, place_cells, training1, 
+                          worm_0, worm_1, worm_2 };
       selectFile.addEventListener('change', (event) => {
         const nameValue = event.target.value;
         RemoveAll();
