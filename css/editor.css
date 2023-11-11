@@ -345,15 +345,9 @@ select:focus {
   position: relative;
   display: inline-block;
   top: 5px;
-  width: 45px;
+  width: 100px;
   height: 8px;
   margin-left: 10px;
-}
-
-.chec input {
-  opacity: 0;
-  width: 0;
-  height: 0;
 }
 
 .slider {
@@ -363,33 +357,8 @@ select:focus {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
-  border-radius: 34px;
 }
 
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 4px;
-  bottom: -7px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
-  border-radius: 50%;
-  border: 3px solid #ccc;
-}
-
-input:checked + .slider {
-  background-color: #4666E5;
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px #4666E5;
-}
 
 input:checked + .slider:before {
   -webkit-transform: translateX(15px);

@@ -2,6 +2,8 @@ var playing = false;
 
 var intervalID;
 
+var dealyStep = 0;
+
 var space = {
     nodes: [],
     links: [],
@@ -232,7 +234,7 @@ async function tact() {
   LinkState = kernelLink(LinkState, settingData, NodeState, LinkData);
 
   loopTimes = 1 - loopTimes;
-  intervalID = setTimeout(tact, 10);
+  intervalID = setTimeout(tact, dealyStep);
 };
 
 

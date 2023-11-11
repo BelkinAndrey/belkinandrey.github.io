@@ -52,7 +52,16 @@ const inputFields = document.querySelectorAll('input.input-field[type="number"]'
 const openWin = document.getElementById('open-windows');                  //Выподающее меню открыть окно
 const labelTime = document.getElementById('label-time');                  //Вывод интервала времени между тактами 
 
+const delaySlider = document.getElementById('delaySlider');
+
 var key_down = null;
+
+var storedValueDelay = localStorage.getItem("dealyStep");
+if (storedValueDelay) {
+  delaySlider.value = storedValueDelay;
+  dealyStep = storedValueDelay;
+}
+
 
 /////////////////////Управление боковыми панелями
 let isResizingLeft = false;
@@ -809,3 +818,10 @@ openWin.addEventListener ('change', (event) => {
 
   event.target.selectedIndex = 0;
 });
+
+
+delaySlider.addEventListener('input', function() {
+  dealyStep = delaySlider.value;
+  localStorage.setItem("dealyStep", dealyStep);
+});
+
