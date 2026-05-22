@@ -1,0 +1,334 @@
+{
+  "neurons": [
+    {
+      "id": "sensor_food_left",
+      "label": "Food L",
+      "kind": "sensor",
+      "x": 112.0622488071217,
+      "y": -78.04242362340544,
+      "threshold": 1.0,
+      "leak": 0.019999999552965164,
+      "v_reset": 0.0,
+      "refractory": 2,
+      "noise_std": 0.0
+    },
+    {
+      "id": "sensor_food_right",
+      "label": "Food R",
+      "kind": "sensor",
+      "x": 112.47605761704241,
+      "y": 20.577300612066196,
+      "threshold": 1.0,
+      "leak": 0.019999999552965164,
+      "v_reset": 0.0,
+      "refractory": 2,
+      "noise_std": 0.0
+    },
+    {
+      "id": "sensor_threat_left",
+      "label": "Threat L",
+      "kind": "sensor",
+      "x": 113.93834178149645,
+      "y": 177.54406116687898,
+      "threshold": 1.0,
+      "leak": 0.019999999552965164,
+      "v_reset": 0.0,
+      "refractory": 2,
+      "noise_std": 0.0
+    },
+    {
+      "id": "sensor_threat_right",
+      "label": "Threat R",
+      "kind": "sensor",
+      "x": 114.96910525580633,
+      "y": 272.08742864154254,
+      "threshold": 1.0,
+      "leak": 0.019999999552965164,
+      "v_reset": 0.0,
+      "refractory": 2,
+      "noise_std": 0.0
+    },
+    {
+      "id": "sensor_hunger",
+      "label": "Hunger",
+      "kind": "sensor",
+      "x": 431.26732171453375,
+      "y": -286.2064965591595,
+      "threshold": 1.0,
+      "leak": 0.019999999552965164,
+      "v_reset": 0.0,
+      "refractory": 2,
+      "noise_std": 0.0
+    },
+    {
+      "id": "sensor_fatigue",
+      "label": "Fatigue",
+      "kind": "sensor",
+      "x": 645.3602404828083,
+      "y": -282.632970766034,
+      "threshold": 1.0,
+      "leak": 0.019999999552965164,
+      "v_reset": 0.0,
+      "refractory": 2,
+      "noise_std": 0.0
+    },
+    {
+      "id": "lidar_0",
+      "label": "Lidar 1",
+      "kind": "sensor",
+      "x": 90.94466601452287,
+      "y": 502.93589816232304,
+      "threshold": 1.0,
+      "leak": 0.019999999552965164,
+      "v_reset": 0.0,
+      "refractory": 2,
+      "noise_std": 0.0
+    },
+    {
+      "id": "lidar_1",
+      "label": "Lidar 2",
+      "kind": "sensor",
+      "x": 137.45156024792198,
+      "y": 595.6477209488901,
+      "threshold": 1.0,
+      "leak": 0.019999999552965164,
+      "v_reset": 0.0,
+      "refractory": 2,
+      "noise_std": 0.0
+    },
+    {
+      "id": "lidar_2",
+      "label": "Lidar 3",
+      "kind": "sensor",
+      "x": 167.0541527628206,
+      "y": 693.2024571112773,
+      "threshold": 1.0,
+      "leak": 0.019999999552965164,
+      "v_reset": 0.0,
+      "refractory": 2,
+      "noise_std": 0.0
+    },
+    {
+      "id": "lidar_3",
+      "label": "Lidar 4",
+      "kind": "sensor",
+      "x": 138.49473081123995,
+      "y": 783.5470610741264,
+      "threshold": 1.0,
+      "leak": 0.019999999552965164,
+      "v_reset": 0.0,
+      "refractory": 2,
+      "noise_std": 0.0
+    },
+    {
+      "id": "lidar_4",
+      "label": "Lidar 5",
+      "kind": "sensor",
+      "x": 96.8704034068658,
+      "y": 874.8575755279606,
+      "threshold": 1.0,
+      "leak": 0.019999999552965164,
+      "v_reset": 0.0,
+      "refractory": 2,
+      "noise_std": 0.0
+    },
+    {
+      "id": "motor_forward",
+      "label": "Forward",
+      "kind": "motor",
+      "x": 1597.9978669283923,
+      "y": 300.9845244929101,
+      "threshold": 1.0,
+      "leak": 0.11999999731779099,
+      "v_reset": 0.0,
+      "refractory": 3,
+      "noise_std": 0.0
+    },
+    {
+      "id": "motor_backward",
+      "label": "Back",
+      "kind": "motor",
+      "x": 1307.9781277918585,
+      "y": 299.6275638670939,
+      "threshold": 1.0,
+      "leak": 0.11999999731779099,
+      "v_reset": 0.0,
+      "refractory": 3,
+      "noise_std": 0.0
+    },
+    {
+      "id": "motor_left",
+      "label": "Turn L",
+      "kind": "motor",
+      "x": 1452.2461318575727,
+      "y": 160.79336272918587,
+      "threshold": 1.0,
+      "leak": 0.11999999731779099,
+      "v_reset": 0.0,
+      "refractory": 3,
+      "noise_std": 0.0
+    },
+    {
+      "id": "motor_right",
+      "label": "Turn R",
+      "kind": "motor",
+      "x": 1452.8117123672205,
+      "y": 439.837290204821,
+      "threshold": 1.0,
+      "leak": 0.11999999731779099,
+      "v_reset": 0.0,
+      "refractory": 3,
+      "noise_std": 0.0
+    },
+    {
+      "id": "nmph3mz2z4",
+      "label": "Motor neuron",
+      "kind": "inter",
+      "x": 827.0790751248404,
+      "y": -14.70761509075539,
+      "threshold": 1.0,
+      "leak": 0.10000000149011612,
+      "v_reset": 0.0,
+      "refractory": 2,
+      "noise_std": 0.0
+    },
+    {
+      "id": "nmph3p2fc84",
+      "label": "nmph3p2fc84",
+      "kind": "inter",
+      "x": 899.9854709179011,
+      "y": 856.4399196021474,
+      "threshold": 1.0,
+      "leak": 0.10000000149011612,
+      "v_reset": 0.0,
+      "refractory": 10,
+      "noise_std": 0.0
+    },
+    {
+      "id": "nmph3prxg78",
+      "label": "nmph3prxg78",
+      "kind": "inter",
+      "x": 883.6735343862757,
+      "y": 485.09584600531423,
+      "threshold": 1.0,
+      "leak": 0.10000000149011612,
+      "v_reset": 0.0,
+      "refractory": 10,
+      "noise_std": 0.0
+    }
+  ],
+  "synapses": [
+    {
+      "from": "nmph3mz2z4",
+      "to": "motor_forward",
+      "weight": 1.0,
+      "delay": 5
+    },
+    {
+      "from": "nmph3p2fc84",
+      "to": "motor_left",
+      "weight": 1.0,
+      "delay": 5
+    },
+    {
+      "from": "nmph3prxg78",
+      "to": "motor_right",
+      "weight": 1.0,
+      "delay": 5
+    },
+    {
+      "from": "sensor_hunger",
+      "to": "nmph3mz2z4",
+      "weight": 1.0,
+      "delay": 5
+    },
+    {
+      "from": "lidar_3",
+      "to": "nmph3p2fc84",
+      "weight": 1.0,
+      "delay": 5
+    },
+    {
+      "from": "lidar_4",
+      "to": "nmph3p2fc84",
+      "weight": 1.0,
+      "delay": 5
+    },
+    {
+      "from": "nmph3prxg78",
+      "to": "nmph3p2fc84",
+      "weight": -100.0,
+      "delay": 5
+    },
+    {
+      "from": "lidar_0",
+      "to": "nmph3prxg78",
+      "weight": 1.0,
+      "delay": 5
+    },
+    {
+      "from": "lidar_1",
+      "to": "nmph3prxg78",
+      "weight": 1.0,
+      "delay": 5
+    },
+    {
+      "from": "lidar_2",
+      "to": "nmph3prxg78",
+      "weight": 1.0,
+      "delay": 5
+    }
+  ],
+  "groups": [
+    {
+      "id": "gmph3a2eg63",
+      "x": 61.69509609762838,
+      "y": -124.67273611835269,
+      "w": 102.43746042059321,
+      "h": 188.39607686795154,
+      "label": "Food sensors",
+      "color": "#38ffb3",
+      "comment": ""
+    },
+    {
+      "id": "gmph3cyft84",
+      "x": 57.78605321549338,
+      "y": 119.8434223185825,
+      "w": 112.47188625690626,
+      "h": 205.72925110459693,
+      "label": "Threat sensors",
+      "color": "#ff3838",
+      "comment": ""
+    },
+    {
+      "id": "gmph3fi0q70",
+      "x": 37.11816006356242,
+      "y": 428.7613002014698,
+      "w": 175.0656033639932,
+      "h": 508.14936408251583,
+      "label": "Lidars",
+      "color": "#38cdff",
+      "comment": ""
+    },
+    {
+      "id": "gmph3h10822",
+      "x": 355.75988003897163,
+      "y": -345.1122097225266,
+      "w": 155.19649761799513,
+      "h": 112.69142594184768,
+      "label": "Hunger",
+      "color": "#ffee38",
+      "comment": ""
+    },
+    {
+      "id": "gmph3hxvg96",
+      "x": 571.2556538015382,
+      "y": -341.15812460176005,
+      "w": 145.31137038118004,
+      "h": 106.76029826069782,
+      "label": "Fatigue",
+      "color": "#fc38ff",
+      "comment": ""
+    }
+  ]
+}
