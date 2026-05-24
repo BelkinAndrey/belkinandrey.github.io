@@ -67,6 +67,8 @@
     bindSlider('fatigue-gain',  'world_params', 'fatigue_action_gain', 'fatigue-gain-val',  3);
     bindSlider('fatigue-decay', 'world_params', 'fatigue_decay',       'fatigue-decay-val', 3);
 
+    bindPanelResizer('rings.web.panelSplit');
+
     (function bindSimHzSlider() {
         const slider = document.getElementById('sim-hz');
         const val = document.getElementById('sim-hz-val');
@@ -196,6 +198,54 @@
         });
         document.body.appendChild(el);
         setTimeout(() => el.remove(), 1800);
+    }
+
+    function bindPanelResizer(storageKey) {
+        const layout = document.querySelector('.layout');
+        const resizer = document.getElementById('main-panel-resizer');
+        if (!layout || !resizer) return;
+
+        const saved = parseFloat(localStorage.getItem(storageKey));
+        if (Number.isFinite(saved)) setSplit(saved);
+
+        function setSplit(percent) {
+            const clamped = Math.min(72, Math.max(28, percent));
+            layout.style.setProperty('--env-panel-width', `${clamped}%`);
+            window.dispatchEvent(new Event('resize'));
+            return clamped;
+        }
+
+        function setFromClientX(clientX) {
+            const rect = layout.getBoundingClientRect();
+            const raw = ((clientX - rect.left) / rect.width) * 100;
+            const split = setSplit(raw);
+            localStorage.setItem(storageKey, String(split));
+        }
+
+        resizer.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            resizer.setPointerCapture(e.pointerId);
+            document.body.classList.add('resizing-panels');
+        });
+        resizer.addEventListener('pointermove', (e) => {
+            if (!resizer.hasPointerCapture(e.pointerId)) return;
+            setFromClientX(e.clientX);
+        });
+        resizer.addEventListener('pointerup', (e) => {
+            if (resizer.hasPointerCapture(e.pointerId)) resizer.releasePointerCapture(e.pointerId);
+            document.body.classList.remove('resizing-panels');
+        });
+        resizer.addEventListener('pointercancel', (e) => {
+            if (resizer.hasPointerCapture(e.pointerId)) resizer.releasePointerCapture(e.pointerId);
+            document.body.classList.remove('resizing-panels');
+        });
+        resizer.addEventListener('keydown', (e) => {
+            if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+            e.preventDefault();
+            const current = parseFloat(getComputedStyle(layout).getPropertyValue('--env-panel-width')) || 48;
+            const split = setSplit(current + (e.key === 'ArrowLeft' ? -2 : 2));
+            localStorage.setItem(storageKey, String(split));
+        });
     }
 
     // --- Start the simulation loop now that everything is wired -----------

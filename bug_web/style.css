@@ -70,12 +70,38 @@ input[type=range] { vertical-align: middle; }
 .tooltip.hidden { display: none; }
 
 .layout {
+    --env-panel-width: 48%;
     display: grid;
-    grid-template-columns: minmax(540px, 1fr) minmax(640px, 1.1fr);
-    gap: 10px;
+    grid-template-columns: minmax(360px, var(--env-panel-width)) 10px minmax(420px, 1fr);
+    column-gap: 0;
     padding: 10px;
     flex: 1 1 auto;
     min-height: 0;
+}
+.panel-resizer {
+    align-self: stretch;
+    cursor: col-resize;
+    position: relative;
+    touch-action: none;
+}
+.panel-resizer::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 999px;
+    background: #283149;
+}
+.panel-resizer:hover::before,
+.panel-resizer:focus-visible::before,
+body.resizing-panels .panel-resizer::before {
+    background: #4a6cff;
+}
+body.resizing-panels {
+    cursor: col-resize;
+    user-select: none;
 }
 .panel {
     background: #1a2030;
