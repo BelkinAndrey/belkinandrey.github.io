@@ -1,9 +1,6 @@
 {
   "files": [
     "start.json",
-    "simple_1.json",
-    "simple_2.json",
-    "simple_3.json",
-    "simple_4.json"
+    "simple.json"
   ]
 }
