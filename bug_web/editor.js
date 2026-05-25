@@ -177,7 +177,7 @@
             window.appSocket.emit('add_neuron', {
                 id, label: id, kind: 'inter',
                 x: w.x, y: w.y,
-                threshold: 1.0, leak: 0.1, v_reset: 0, refractory: 2, noise_std: 0,
+                threshold: 1.0, leak: 0.1, v_reset: 0, v_min: -100, refractory: 2, noise_std: 0,
             });
             return;
         }
@@ -449,6 +449,7 @@
         document.getElementById('prop-n-threshold').value = n.threshold.toFixed(3);
         document.getElementById('prop-n-leak').value = n.leak.toFixed(3);
         document.getElementById('prop-n-reset').value = n.v_reset.toFixed(3);
+        document.getElementById('prop-n-vmin').value = (n.v_min !== undefined ? n.v_min : -100);
         document.getElementById('prop-n-refr').value = n.refractory;
         document.getElementById('prop-n-noise').value = (n.noise_std || 0).toFixed(3);
         document.getElementById('prop-n-delete').disabled = defaultIds.has(n.id);
@@ -513,6 +514,7 @@
             threshold: parseFloat(document.getElementById('prop-n-threshold').value),
             leak: parseFloat(document.getElementById('prop-n-leak').value),
             v_reset: parseFloat(document.getElementById('prop-n-reset').value),
+            v_min: parseFloat(document.getElementById('prop-n-vmin').value) || -100,
             refractory: parseInt(document.getElementById('prop-n-refr').value, 10),
             noise_std: parseFloat(document.getElementById('prop-n-noise').value) || 0,
         });
@@ -583,6 +585,7 @@
             threshold: n.threshold,
             leak: n.leak,
             v_reset: n.v_reset,
+            v_min: n.v_min !== undefined ? n.v_min : -100,
             refractory: n.refractory,
             noise_std: n.noise_std,
         }));
@@ -634,6 +637,7 @@
                 threshold: pn.threshold,
                 leak: pn.leak,
                 v_reset: pn.v_reset,
+                v_min: pn.v_min !== undefined ? pn.v_min : -100,
                 refractory: pn.refractory,
                 noise_std: pn.noise_std,
             });

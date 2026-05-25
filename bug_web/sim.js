@@ -49,6 +49,7 @@
             this.threshold        = new Float32Array(capacity);
             this.leak             = new Float32Array(capacity);
             this.vReset           = new Float32Array(capacity);
+            this.vMin             = new Float32Array(capacity).fill(-100.0);
             this.noiseStd         = new Float32Array(capacity);
             this.refractoryLeft   = new Int32Array(capacity);
             this.refractoryPeriod = new Int32Array(capacity);
@@ -58,6 +59,7 @@
             for (let i = 0; i < capacity; i++) {
                 this.threshold[i] = 1.0;
                 this.leak[i] = 0.08;
+                this.vMin[i] = -100.0;
                 this.refractoryPeriod[i] = 2;
             }
 
@@ -95,6 +97,7 @@
             this.threshold[idx]        = opts.threshold ?? 1.0;
             this.leak[idx]             = opts.leak ?? 0.08;
             this.vReset[idx]           = opts.v_reset ?? 0.0;
+            this.vMin[idx]             = opts.v_min ?? -100.0;
             this.refractoryPeriod[idx] = Math.max(0, opts.refractory ?? 2);
             this.noiseStd[idx]         = Math.max(0, opts.noise_std ?? 0);
             this.V[idx] = 0;
@@ -126,7 +129,7 @@
         _swap(a, b) {
             if (a === b) return;
             const scalarArrs = [
-                this.V, this.threshold, this.leak, this.vReset,
+                this.V, this.threshold, this.leak, this.vReset, this.vMin,
                 this.noiseStd, this.refractoryLeft, this.refractoryPeriod,
                 this.spikes, this.spikeCount,
             ];
@@ -153,6 +156,7 @@
             this.threshold[idx] = 1.0;
             this.leak[idx] = 0.08;
             this.vReset[idx] = 0;
+            this.vMin[idx] = -100.0;
             this.noiseStd[idx] = 0;
             this.refractoryLeft[idx] = 0;
             this.refractoryPeriod[idx] = 2;
@@ -191,6 +195,7 @@
             if ('threshold'  in params) this.threshold[idx] = +params.threshold;
             if ('leak'       in params) this.leak[idx] = +params.leak;
             if ('v_reset'    in params) this.vReset[idx] = +params.v_reset;
+            if ('v_min'      in params) this.vMin[idx] = +params.v_min;
             if ('refractory' in params) this.refractoryPeriod[idx] = Math.max(0, +params.refractory | 0);
             if ('noise_std'  in params) this.noiseStd[idx] = Math.max(0, +params.noise_std);
             if ('label' in params) this.meta[nid].label = String(params.label);
@@ -268,6 +273,8 @@
                     this.refractoryLeft[i] = this.refractoryPeriod[i];
                     this.spikeCount[i]++;
                 }
+                // Clamp V to v_min
+                if (vNext < this.vMin[i]) vNext = this.vMin[i];
                 this.V[i] = vNext;
                 this.spikes[i] = newSpikes[i];
             }
@@ -339,6 +346,7 @@
                     threshold: this.threshold[i],
                     leak: this.leak[i],
                     v_reset: this.vReset[i],
+                    v_min: this.vMin[i],
                     refractory: this.refractoryPeriod[i],
                     noise_std: this.noiseStd[i],
                 });
@@ -378,6 +386,7 @@
                 this.threshold[i] = 1.0;
                 this.leak[i] = 0.08;
                 this.vReset[i] = 0;
+                this.vMin[i] = -100.0;
                 this.noiseStd[i] = 0;
                 this.refractoryLeft[i] = 0;
                 this.refractoryPeriod[i] = 2;
@@ -413,6 +422,7 @@
                         threshold: n.threshold ?? 1.0,
                         leak: n.leak ?? 0.08,
                         v_reset: n.v_reset ?? 0,
+                        v_min: n.v_min ?? -100.0,
                         refractory: n.refractory ?? 2,
                         noise_std: n.noise_std ?? 0,
                     });
@@ -922,7 +932,8 @@
                             label: msg.label, kind: msg.kind ?? 'inter',
                             x: msg.x, y: msg.y,
                             threshold: msg.threshold, leak: msg.leak,
-                            v_reset: msg.v_reset, refractory: msg.refractory,
+                            v_reset: msg.v_reset, v_min: msg.v_min,
+                            refractory: msg.refractory,
                             noise_std: msg.noise_std,
                         });
                     } catch (e) { console.warn(e); }
