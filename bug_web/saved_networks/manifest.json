@@ -1,6 +1,7 @@
 {
   "files": [
     "start.json",
-    "simple.json"
+    "simple.json",
+    "rings.json"
   ]
 }
