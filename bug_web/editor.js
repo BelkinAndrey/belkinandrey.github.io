@@ -41,6 +41,7 @@
     let lastMouseWorld = { x: 0, y: 0 };
     let lastFrameTime = performance.now();
     let panning = null;
+    let pendingMultiDragPositions = null; // Map<id, {x, y}> — guards setTopology during multi-drag commit
 
     let currentTool = 'select';
     const NODE_R = 18;
@@ -340,10 +341,20 @@
                 const n = neuronById.get(dragging.id);
                 if (n) window.appSocket.emit('update_neuron', { id: n.id, x: n.x, y: n.y });
             } else if (dragging.mode === 'multi') {
+                // Snapshot final positions before emitting, because each
+                // update_neuron triggers setTopology which rebuilds neuronById
+                // from server data and would reset not-yet-sent positions.
+                const finalPositions = [];
                 for (const id of dragging.origs.keys()) {
                     const n = neuronById.get(id);
-                    if (n) window.appSocket.emit('update_neuron', { id: n.id, x: n.x, y: n.y });
+                    if (n) finalPositions.push({ id: n.id, x: n.x, y: n.y });
                 }
+                // Store positions so setTopology can preserve them
+                pendingMultiDragPositions = new Map(finalPositions.map(p => [p.id, { x: p.x, y: p.y }]));
+                for (const pos of finalPositions) {
+                    window.appSocket.emit('update_neuron', pos);
+                }
+                pendingMultiDragPositions = null;
             } else if (dragging.mode === 'group') {
                 const g = groupById.get(dragging.id);
                 if (g) window.appSocket.emit('update_group',
@@ -845,7 +856,28 @@
             topology.groups = topology.groups || [];
             defaultIds = new Set(defaults || []);
             neuronById = new Map();
-            for (const n of topology.neurons) neuronById.set(n.id, n);
+            for (const n of topology.neurons) {
+                // During a multi-drag commit, some neurons have already been
+                // moved locally but the server hasn't processed them yet.
+                // Preserve the intended final positions so they aren't
+                // overwritten by stale server data.
+                if (pendingMultiDragPositions && pendingMultiDragPositions.has(n.id)) {
+                    const pos = pendingMultiDragPositions.get(n.id);
+                    n.x = pos.x;
+                    n.y = pos.y;
+                }
+                // During a live multi-drag (before mouseup), recompute
+                // positions from original coords + current mouse offset so
+                // that incoming topology updates don't snap neurons back.
+                if (dragging && dragging.mode === 'multi' && dragging.origs && dragging.origs.has(n.id)) {
+                    const [ox, oy] = dragging.origs.get(n.id);
+                    const dx = lastMouseWorld.x - dragging.startX;
+                    const dy = lastMouseWorld.y - dragging.startY;
+                    n.x = ox + dx;
+                    n.y = oy + dy;
+                }
+                neuronById.set(n.id, n);
+            }
             synapseByKey = new Map();
             for (const s of topology.synapses) synapseByKey.set(synapseKey(s.from, s.to), s);
             groupById = new Map();
