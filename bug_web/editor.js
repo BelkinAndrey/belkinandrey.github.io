@@ -963,13 +963,24 @@
 
         const rgb = KIND_RGB[n.kind] || KIND_RGB.inter;
         const act = Math.max(0, Math.min(1, v));
+        const negV = Math.max(0, Math.min(1, -v)); // how inhibited (0..1 range)
 
         if (flash > 0) {
             ctx.fillStyle = `rgba(255, 240, 120, ${flash * 0.55})`;
             ctx.beginPath(); ctx.arc(n.x, n.y, NODE_R * 1.7, 0, Math.PI * 2); ctx.fill();
         }
-        const k = Math.max(0.18, act * 0.85 + flash * 0.15);
-        ctx.fillStyle = `rgb(${Math.round(rgb.r * k)},${Math.round(rgb.g * k)},${Math.round(rgb.b * k)})`;
+        let k = Math.max(0.18, act * 0.85 + flash * 0.15);
+        // When inhibited, blend toward a dark blue tint to visualize negative potential
+        let rr = Math.round(rgb.r * k);
+        let gg = Math.round(rgb.g * k);
+        let bb = Math.round(rgb.b * k);
+        if (negV > 0) {
+            const inhib = negV * 0.7; // strength of inhibition tint
+            rr = Math.round(rr * (1 - inhib));
+            gg = Math.round(gg * (1 - inhib));
+            bb = Math.round(Math.min(255, bb * (1 - inhib * 0.3) + 80 * inhib));
+        }
+        ctx.fillStyle = `rgb(${rr},${gg},${bb})`;
         ctx.beginPath(); ctx.arc(n.x, n.y, NODE_R, 0, Math.PI * 2); ctx.fill();
 
         const isSel = isNeuronInSelection(n.id);
@@ -1064,6 +1075,14 @@
             activityIndex.clear();
             const ids = activity.ids;
             if (ids) for (let i = 0; i < ids.length; i++) activityIndex.set(ids[i], i);
+            // Update current V in properties panel if a neuron is selected
+            if (selected && selected.type === 'neuron') {
+                const idx = activityIndex.get(selected.id);
+                if (idx !== undefined && activity.raw_v) {
+                    const vEl = document.getElementById('prop-n-v');
+                    if (vEl) vEl.textContent = activity.raw_v[idx].toFixed(3);
+                }
+            }
         },
         setPulses(p) {
             pulses = p || { from_idx: [], to_idx: [], progress: [], duration: [], sign: [] };

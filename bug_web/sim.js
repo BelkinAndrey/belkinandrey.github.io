@@ -302,17 +302,22 @@
         snapshotState() {
             const n = this.n;
             const potentials = new Array(n);
+            const rawV = new Array(n);
             const spikeCounts = new Array(n);
             for (let i = 0; i < n; i++) {
                 const thr = this.threshold[i];
                 let norm = thr > 0 ? this.V[i] / thr : 0;
-                if (norm < -0.5) norm = -0.5;
-                if (norm >  1.0) norm =  1.0;
+                // Use v_min-aware lower bound so inhibition is visible
+                let lowerBound = thr > 0 ? this.vMin[i] / thr : -1.0;
+                if (lowerBound < -1.0) lowerBound = -1.0;
+                if (norm < lowerBound) norm = lowerBound;
+                if (norm > 1.0) norm = 1.0;
                 potentials[i] = norm;
+                rawV[i] = this.V[i];
                 spikeCounts[i] = this.spikeCount[i];
                 this.spikeCount[i] = 0;
             }
-            return { ids: this.ids.slice(), potentials, spike_counts: spikeCounts };
+            return { ids: this.ids.slice(), potentials, raw_v: rawV, spike_counts: spikeCounts };
         }
 
         snapshotPulses(dt) {
