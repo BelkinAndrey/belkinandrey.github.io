@@ -42,6 +42,8 @@
     let lastFrameTime = performance.now();
     let panning = null;
     let pendingMultiDragPositions = null; // Map<id, {x, y}> — guards setTopology during multi-drag commit
+    let copiedPattern = null;  // { neurons: [{id, label, kind, dx, dy, threshold, leak, v_reset, refractory, noise_std}], synapses: [{fromIdx, toIdx, weight, delay}] }
+    let pasteMode = false;     // when true, next click on canvas places the pattern
 
     let currentTool = 'select';
     const NODE_R = 18;
@@ -160,6 +162,13 @@
 
         const w = mouseWorld(e);
         lastMouseWorld = w;
+
+        // Paste mode: place pattern at click position
+        if (pasteMode) {
+            pastePatternAt(w.x, w.y);
+            return;
+        }
+
         const n = findNeuronAt(w);
 
         if (currentTool === 'add-neuron') {
@@ -550,6 +559,122 @@
         clearSelection();
     });
 
+    // ---- Copy / Paste pattern ----
+    function copyPattern() {
+        if (!selected || selected.type !== 'multi') return;
+        const ids = selected.neuronIds;
+        const neurons = [];
+        for (const id of ids) {
+            const n = neuronById.get(id);
+            if (n) neurons.push(n);
+        }
+        if (neurons.length === 0) return;
+        // Compute centroid
+        let cx = 0, cy = 0;
+        for (const n of neurons) { cx += n.x; cy += n.y; }
+        cx /= neurons.length; cy /= neurons.length;
+        // Store neurons with relative positions
+        const patternNeurons = neurons.map(n => ({
+            origId: n.id,
+            label: n.label,
+            kind: n.kind,
+            dx: n.x - cx,
+            dy: n.y - cy,
+            threshold: n.threshold,
+            leak: n.leak,
+            v_reset: n.v_reset,
+            refractory: n.refractory,
+            noise_std: n.noise_std,
+        }));
+        // Build index for synapse lookup
+        const idToPatternIdx = new Map();
+        patternNeurons.forEach((pn, idx) => idToPatternIdx.set(pn.origId, idx));
+        // Collect internal synapses (both from and to are in the selection)
+        const patternSynapses = [];
+        for (const s of topology.synapses) {
+            if (idToPatternIdx.has(s.from) && idToPatternIdx.has(s.to)) {
+                patternSynapses.push({
+                    fromIdx: idToPatternIdx.get(s.from),
+                    toIdx: idToPatternIdx.get(s.to),
+                    weight: s.weight,
+                    delay: s.delay,
+                });
+            }
+        }
+        copiedPattern = { neurons: patternNeurons, synapses: patternSynapses };
+        pasteMode = false;
+        // Update paste button visibility
+        const pasteBtn = document.getElementById('prop-multi-paste');
+        if (pasteBtn) pasteBtn.style.opacity = '1';
+    }
+
+    function activatePasteMode() {
+        if (!copiedPattern) return;
+        pasteMode = true;
+        clearSelection();
+        canvas.style.cursor = 'copy';
+    }
+
+    function pastePatternAt(wx, wy) {
+        if (!copiedPattern || !pasteMode) return;
+        pasteMode = false;
+        canvas.style.cursor = '';
+        const idMap = new Map(); // patternIdx -> new neuron id
+        // Create neurons
+        for (let i = 0; i < copiedPattern.neurons.length; i++) {
+            const pn = copiedPattern.neurons[i];
+            const newId = 'n' + Date.now().toString(36) + Math.floor(Math.random() * 1000) + '_' + i;
+            idMap.set(i, newId);
+            window.appSocket.emit('add_neuron', {
+                id: newId,
+                label: pn.label,
+                kind: pn.kind,
+                x: wx + pn.dx,
+                y: wy + pn.dy,
+                threshold: pn.threshold,
+                leak: pn.leak,
+                v_reset: pn.v_reset,
+                refractory: pn.refractory,
+                noise_std: pn.noise_std,
+            });
+        }
+        // Create synapses (with a small delay to ensure neurons exist)
+        setTimeout(() => {
+            for (const ps of copiedPattern.synapses) {
+                window.appSocket.emit('add_synapse', {
+                    from: idMap.get(ps.fromIdx),
+                    to: idMap.get(ps.toIdx),
+                    weight: ps.weight,
+                    delay: ps.delay,
+                });
+            }
+        }, 50);
+    }
+
+    document.getElementById('prop-multi-copy').addEventListener('click', copyPattern);
+    document.getElementById('prop-multi-paste').addEventListener('click', activatePasteMode);
+
+    // Ctrl+C / Ctrl+V keyboard shortcuts for pattern copy/paste
+    window.addEventListener('keydown', (e) => {
+        if (e.target.matches('input, textarea, select')) return;
+        if (e.ctrlKey && e.key === 'c') {
+            if (selected && selected.type === 'multi') {
+                e.preventDefault();
+                copyPattern();
+            }
+        }
+        if (e.ctrlKey && e.key === 'v') {
+            if (copiedPattern) {
+                e.preventDefault();
+                activatePasteMode();
+            }
+        }
+        if (e.key === 'Escape' && pasteMode) {
+            pasteMode = false;
+            canvas.style.cursor = '';
+        }
+    });
+
     // ----------------------------------------------------------- rendering
 
     const KIND_COLOR = {
@@ -650,6 +775,33 @@
             ctx.setLineDash([5 / view.scale, 4 / view.scale]);
             ctx.strokeRect(x, y, w, h);
             ctx.setLineDash([]);
+        }
+
+        // Paste preview (ghost of the pattern following the cursor)
+        if (pasteMode && copiedPattern) {
+            ctx.globalAlpha = 0.4;
+            // Draw ghost synapses
+            for (const ps of copiedPattern.synapses) {
+                const a = copiedPattern.neurons[ps.fromIdx];
+                const b = copiedPattern.neurons[ps.toIdx];
+                const ax = lastMouseWorld.x + a.dx, ay = lastMouseWorld.y + a.dy;
+                const bx = lastMouseWorld.x + b.dx, by = lastMouseWorld.y + b.dy;
+                ctx.strokeStyle = ps.weight >= 0 ? '#78c8ff' : '#ff8c8c';
+                ctx.lineWidth = 1.5 / view.scale;
+                ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+            }
+            // Draw ghost neurons
+            for (const pn of copiedPattern.neurons) {
+                const px = lastMouseWorld.x + pn.dx;
+                const py = lastMouseWorld.y + pn.dy;
+                const rgb = KIND_RGB[pn.kind] || KIND_RGB.inter;
+                ctx.fillStyle = `rgb(${rgb.r},${rgb.g},${rgb.b})`;
+                ctx.beginPath(); ctx.arc(px, py, NODE_R, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5 / view.scale;
+                ctx.stroke();
+            }
+            ctx.globalAlpha = 1.0;
         }
 
         // HUD overlay (screen space)
