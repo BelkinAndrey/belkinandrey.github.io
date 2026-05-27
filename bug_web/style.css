@@ -40,6 +40,38 @@ button.motor {
 }
 button.motor:active, button.motor.held { background: #ff8a3a; color: #fff; }
 
+.task-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #9aa6c0;
+    font-size: 12px;
+}
+.task-select select {
+    background: #101622;
+    color: #e8eefc;
+    border: 1px solid #2b3548;
+    border-radius: 4px;
+    padding: 5px 8px;
+}
+#manual-motors {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.manual-row > button.motor {
+    display: none;
+}
+body.gym-task .bug-only {
+    display: none !important;
+}
+.gym-only {
+    display: none !important;
+}
+body.gym-task .gym-only {
+    display: flex !important;
+}
+
 select, input[type=text], input[type=number], textarea {
     background: #1f2638;
     color: #e6ecff;
@@ -120,6 +152,13 @@ body.resizing-panels {
 .panel-head h2 {
     margin: 0; font-size: 14px; font-weight: 600;
     color: #b6c2ff; letter-spacing: 0.4px; text-transform: uppercase;
+}
+.panel-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+    min-width: max-content;
 }
 .toolbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .toolbar label { font-size: 12px; color: #95a1b7; }
@@ -255,3 +294,10 @@ dialog menu { display: flex; justify-content: flex-end; gap: 8px; padding: 0; ma
     padding: 6px 10px; cursor: pointer; border-radius: 4px;
 }
 #load-list li:hover { background: #2a3550; }
+#load-list .load-section {
+    color: #7aa0ff;
+    cursor: default;
+    font-weight: 700;
+    margin-top: 8px;
+}
+#load-list .load-section:hover { background: transparent; }

@@ -3,5 +3,14 @@
     "start.json",
     "simple.json",
     "rings.json"
-  ]
+  ],
+  "groups": {
+    "BUG": [
+      "start.json",
+      "simple.json",
+      "rings.json"
+    ],
+    "CartPole": [],
+    "MountainCar": []
+  }
 }

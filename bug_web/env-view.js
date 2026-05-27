@@ -79,6 +79,7 @@
         }
         if (e.button !== 0) return;
         const w = mouseWorld(e);
+        if (state.kind !== 'bug') return;
         if (currentTool === 'obstacle') { dragObstacle = { x0: w.x, y0: w.y, x: w.x, y: w.y }; return; }
         if (currentTool === 'erase') {
             const hit = findObjectAt(w);
@@ -105,6 +106,7 @@
     });
     function endActions(e) {
         if (panning) { panning = null; return; }
+        if (!state || state.kind !== 'bug') { dragObstacle = null; return; }
         if (dragObstacle) {
             const w = mouseWorld(e);
             const x0 = Math.min(dragObstacle.x0, w.x);
@@ -137,6 +139,9 @@
         ctx.setTransform(view.scale, 0, 0, view.scale, view.tx, view.ty);
 
         if (state) {
+            if (state.kind === 'gym') {
+                drawGymState(state);
+            } else {
             ctx.strokeStyle = '#141a26';
             ctx.lineWidth = 1 / view.scale;
             const W = state.width, H = state.height;
@@ -169,6 +174,7 @@
             }
 
             drawAgent(state.agent, state.sensor_arcs);
+            }
         }
 
         if (dragObstacle) {
@@ -284,11 +290,166 @@
         ctx.strokeStyle = '#1a1410'; ctx.lineWidth = 1 / view.scale; ctx.stroke();
     }
 
+    function drawGymState(s) {
+        const task = gymTaskKey(s);
+        if (task === 'cartpole') renderCartPole(s);
+        else if (task === 'mountain_car') renderMountainCar(s);
+    }
+
+    function gymTaskKey(s) {
+        if (s.task) return s.task;
+        if (s.task_id === 'CartPole') return 'cartpole';
+        if (s.task_id === 'MountainCar') return 'mountain_car';
+        return '';
+    }
+
+    function renderCartPole(s) {
+        const W = s.width || 1100, H = s.height || 700;
+        const obs = s.observation || [0, 0, 0, 0];
+        const x = s.x ?? obs[0] ?? 0;
+        const theta = s.theta ?? obs[2] ?? 0;
+        const xLimit = s.x_limit || 2.4;
+        const poleHalfLen = s.pole_half_len || 0.5;
+        const forceDir = s.force_dir ?? ((s.action === 0) ? -1 : 1);
+        const groundY = H * 0.72;
+        const pxPerUnit = (W * 0.40) / xLimit;
+        const cxWorld = W / 2 + x * pxPerUnit;
+
+        ctx.setTransform(view.scale, 0, 0, view.scale, view.tx, view.ty);
+        ctx.strokeStyle = '#2a3447'; ctx.lineWidth = 2 / view.scale;
+        ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
+
+        const lx = W / 2 - xLimit * pxPerUnit;
+        const rx = W / 2 + xLimit * pxPerUnit;
+        ctx.strokeStyle = '#5b6a8a';
+        ctx.setLineDash([6 / view.scale, 6 / view.scale]);
+        ctx.beginPath();
+        ctx.moveTo(lx, groundY - 80); ctx.lineTo(lx, groundY + 20);
+        ctx.moveTo(rx, groundY - 80); ctx.lineTo(rx, groundY + 20);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const cartW = 90, cartH = 36;
+        ctx.fillStyle = s.done ? '#a85050' : '#3a5cff';
+        ctx.fillRect(cxWorld - cartW / 2, groundY - cartH, cartW, cartH);
+        ctx.strokeStyle = '#0a0d14'; ctx.lineWidth = 2 / view.scale;
+        ctx.strokeRect(cxWorld - cartW / 2, groundY - cartH, cartW, cartH);
+        ctx.fillStyle = '#202836';
+        ctx.beginPath(); ctx.arc(cxWorld - cartW / 3, groundY - 4, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cxWorld + cartW / 3, groundY - 4, 6, 0, Math.PI * 2); ctx.fill();
+
+        const poleLen = poleHalfLen * 2 * pxPerUnit;
+        const px = cxWorld + Math.sin(theta) * poleLen;
+        const py = groundY - cartH - Math.cos(theta) * poleLen;
+        ctx.strokeStyle = s.done ? '#ff8a8a' : '#ffd87a';
+        ctx.lineWidth = 8 / view.scale; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cxWorld, groundY - cartH); ctx.lineTo(px, py); ctx.stroke();
+        ctx.lineCap = 'butt';
+        ctx.fillStyle = '#ffd87a';
+        ctx.beginPath(); ctx.arc(cxWorld, groundY - cartH, 5, 0, Math.PI * 2); ctx.fill();
+
+        if (forceDir !== 0) {
+            const ax = cxWorld + forceDir * 35;
+            ctx.strokeStyle = '#ffaa55'; ctx.lineWidth = 3 / view.scale;
+            ctx.beginPath();
+            ctx.moveTo(cxWorld, groundY - cartH / 2);
+            ctx.lineTo(ax, groundY - cartH / 2);
+            const ah = 6;
+            ctx.moveTo(ax, groundY - cartH / 2);
+            ctx.lineTo(ax - forceDir * ah, groundY - cartH / 2 - ah / 2);
+            ctx.moveTo(ax, groundY - cartH / 2);
+            ctx.lineTo(ax - forceDir * ah, groundY - cartH / 2 + ah / 2);
+            ctx.stroke();
+        }
+    }
+
+    function hillY(xSim, W, H) {
+        const groundY = H * 0.80;
+        const topY = H * 0.15;
+        const hillH = groundY - topY;
+        return groundY - (Math.sin(3 * xSim) * 0.45 + 0.55) * hillH;
+    }
+
+    function renderMountainCar(s) {
+        const W = s.width || 1100, H = s.height || 700;
+        const obs = s.observation || [-0.5, 0];
+        const pos = s.pos ?? obs[0] ?? -0.5;
+        const minPos = s.min_pos ?? -1.2;
+        const maxPos = s.max_pos ?? 0.6;
+        const goalPos = s.goal_pos ?? 0.5;
+        const action = s.action ?? 0;
+        ctx.setTransform(view.scale, 0, 0, view.scale, view.tx, view.ty);
+
+        const xMargin = W * 0.06;
+        const xWorldRange = maxPos - minPos;
+        const pxPerUnit = (W - 2 * xMargin) / xWorldRange;
+        function simToScreenX(x) { return xMargin + (x - minPos) * pxPerUnit; }
+
+        ctx.fillStyle = '#1a2233';
+        ctx.beginPath();
+        const N = 200;
+        for (let i = 0; i <= N; i++) {
+            const xSim = minPos + (i / N) * xWorldRange;
+            const sx = simToScreenX(xSim);
+            const sy = hillY(xSim, W, H);
+            if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+        }
+        ctx.lineTo(simToScreenX(maxPos), H);
+        ctx.lineTo(simToScreenX(minPos), H);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#3a4a66'; ctx.lineWidth = 2 / view.scale;
+        ctx.beginPath();
+        for (let i = 0; i <= N; i++) {
+            const xSim = minPos + (i / N) * xWorldRange;
+            const sx = simToScreenX(xSim);
+            const sy = hillY(xSim, W, H);
+            if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+        }
+        ctx.stroke();
+
+        const gx = simToScreenX(goalPos);
+        const gy = hillY(goalPos, W, H);
+        ctx.strokeStyle = '#e0e6f5'; ctx.lineWidth = 2 / view.scale;
+        ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx, gy - 36); ctx.stroke();
+        ctx.fillStyle = s.solved ? '#9be37c' : '#ffd87a';
+        ctx.beginPath();
+        ctx.moveTo(gx, gy - 36); ctx.lineTo(gx + 18, gy - 30);
+        ctx.lineTo(gx, gy - 24); ctx.closePath(); ctx.fill();
+
+        const carX = simToScreenX(pos);
+        const carY = hillY(pos, W, H);
+        const eps = 0.01;
+        const slope = (hillY(pos + eps, W, H) - hillY(pos - eps, W, H)) /
+            ((simToScreenX(pos + eps) - simToScreenX(pos - eps)) || 1);
+        const ang = Math.atan(slope);
+        ctx.save();
+        ctx.translate(carX, carY);
+        ctx.rotate(ang);
+        ctx.fillStyle = '#3a5cff';
+        ctx.fillRect(-18, -16, 36, 12);
+        ctx.fillStyle = '#5b75d6';
+        ctx.fillRect(-12, -24, 24, 10);
+        ctx.fillStyle = '#202836';
+        ctx.beginPath(); ctx.arc(-12, -2, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(12, -2, 5, 0, Math.PI * 2); ctx.fill();
+        if (action !== 0) {
+            ctx.strokeStyle = '#ffaa55'; ctx.lineWidth = 2 / view.scale;
+            ctx.beginPath();
+            ctx.moveTo(0, -28); ctx.lineTo(action * 16, -28);
+            const ah = 5; const sx = action * 16;
+            ctx.moveTo(sx, -28); ctx.lineTo(sx - action * ah, -28 - ah / 2);
+            ctx.moveTo(sx, -28); ctx.lineTo(sx - action * ah, -28 + ah / 2);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
     // ----------------------------------------------------------- HUD bars
 
     function drawHud() {
         if (!state) return;
-        const a = state.agent;
         ctx.font = '11px -apple-system, "Segoe UI", monospace';
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'left';
@@ -297,10 +458,54 @@
         ctx.fillStyle = 'rgba(180, 200, 255, 0.45)';
         ctx.fillText(`zoom ${view.scale.toFixed(2)}× · wheel=zoom · Shift+drag=pan`, 10, 14);
 
+        if (state.kind !== 'gym') {
+            const a = state.agent;
         const x0 = 10, y0 = 36, w = 160, h = 12, gap = 6;
         drawBar(x0, y0,                  w, h, a.health,  '#6ad06a', '#1f3a1f', 'HP');
         drawBar(x0, y0 + (h + gap),      w, h, a.hunger,  '#ffb14a', '#3a2a16', 'hunger');
         drawBar(x0, y0 + 2 * (h + gap),  w, h, a.fatigue, '#b681e7', '#2a1d3a', 'fatigue');
+            return;
+        }
+
+        const task = gymTaskKey(state);
+        if (task === 'cartpole') {
+            drawHudLines([
+                `steps: ${state.steps ?? state.episode_steps ?? 0}`,
+                `episode: ${state.episode ?? state.episode_index ?? 0}`,
+                `last: ${state.last_episode_steps ?? 0}`,
+                `best: ${state.best_steps ?? 0}`,
+                `reward sensor: ${Number(state.reward_signal ?? 0).toFixed(2)}`,
+                state.done ? doneReasonText(state.done_reason) : '',
+            ], '#9bcaff');
+        } else if (task === 'mountain_car') {
+            const best = state.best_steps && state.best_steps > 0 ? state.best_steps : 'not solved';
+            drawHudLines([
+                `steps: ${state.steps ?? state.episode_steps ?? 0}`,
+                `episode: ${state.episode ?? state.episode_index ?? 0}`,
+                `last: ${state.last_episode_steps ?? 0}`,
+                `best: ${best}`,
+                `reward sensor: ${Number(state.reward_signal ?? 0).toFixed(2)} · action: ${state.action_name || state.action}`,
+                state.solved ? doneReasonText('goal') : (state.done ? doneReasonText(state.done_reason) : ''),
+            ], '#9bcaff');
+        }
+    }
+
+    function doneReasonText(reason) {
+        if (reason === 'goal') return '— goal! —';
+        if (reason === 'time limit') return '— time limit —';
+        if (reason === 'fallen') return '— fallen —';
+        if (reason === 'terminated') return '— done —';
+        return reason ? `— ${reason} —` : '— done —';
+    }
+
+    function drawHudLines(lines, color) {
+        let y = 36;
+        ctx.fillStyle = color;
+        for (const line of lines) {
+            if (!line) continue;
+            ctx.fillText(line, 10, y);
+            y += 16;
+        }
     }
 
     function drawBar(x, y, w, h, frac, fg, bg, label) {

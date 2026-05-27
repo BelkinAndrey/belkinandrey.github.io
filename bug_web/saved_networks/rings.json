@@ -3233,5 +3233,7 @@
       "color": "#38ffa9",
       "comment": ""
     }
-  ]
+  ],
+  "format_version": 2,
+  "task": "BUG"
 }

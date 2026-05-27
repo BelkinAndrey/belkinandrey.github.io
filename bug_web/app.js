@@ -6,12 +6,23 @@
     'use strict';
 
     const socket = window.appSocket;
+    let currentTask = 'BUG';
+    let currentMotors = ['motor_forward', 'motor_backward', 'motor_left', 'motor_right'];
 
     // --- Stats hooked into the per-frame state event from sim.js -----------
     window.appUI = {
+        onTopology(msg) {
+            if (msg.task) currentTask = msg.task;
+            if (msg.motors) currentMotors = msg.motors;
+            renderTaskSelect(msg.tasks || []);
+            renderManualMotors();
+            updateEnvironmentChrome({ kind: currentTask === 'BUG' ? 'bug' : 'gym' });
+        },
         onState(s) {
             document.getElementById('stat-time').textContent = s.t.toFixed(1);
-            if (s.env && s.env.agent) {
+            if (s.env) updateEnvironmentChrome(s.env);
+            if (s.gym_env_hz !== undefined) updateGymHzDisplay(s.gym_env_hz);
+            if (s.env && s.env.kind === 'bug' && s.env.agent) {
                 const a = s.env.agent;
                 document.getElementById('stat-food').textContent    = a.food_eaten;
                 document.getElementById('stat-hp').textContent      = a.health.toFixed(2);
@@ -24,6 +35,36 @@
             pauseBtn.disabled = !s.running;
         },
     };
+
+    function renderTaskSelect(tasks) {
+        const select = document.getElementById('env-task');
+        if (!select || !tasks.length) return;
+        const known = Array.from(select.options).map(o => o.value).join('|');
+        const incoming = tasks.map(t => t.id).join('|');
+        if (known !== incoming) {
+            select.innerHTML = '';
+            for (const t of tasks) {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = t.label || t.id;
+                select.appendChild(opt);
+            }
+        }
+        select.value = currentTask;
+    }
+
+    const taskSelect = document.getElementById('env-task');
+    if (taskSelect) {
+        taskSelect.addEventListener('change', () => {
+            socket.emit('set_task', { task: taskSelect.value });
+        });
+    }
+
+    function updateEnvironmentChrome(env) {
+        const isBug = env.kind === 'bug';
+        document.body.classList.toggle('gym-task', !isBug);
+        document.body.classList.toggle('bug-task', isBug);
+    }
 
     // --- Top toolbar -------------------------------------------------------
     document.getElementById('btn-play').addEventListener('click',
@@ -66,6 +107,15 @@
     bindSlider('hunger-rate',   'world_params', 'hunger_rate',         'hunger-rate-val',   3);
     bindSlider('fatigue-gain',  'world_params', 'fatigue_action_gain', 'fatigue-gain-val',  3);
     bindSlider('fatigue-decay', 'world_params', 'fatigue_decay',       'fatigue-decay-val', 3);
+    bindSlider('gym-env-hz',    'set_gym_env_hz', 'hz',                'gym-env-hz-val',    0, true);
+
+    function updateGymHzDisplay(hz) {
+        const slider = document.getElementById('gym-env-hz');
+        const val = document.getElementById('gym-env-hz-val');
+        if (!slider || !val || document.activeElement === slider) return;
+        slider.value = String(hz);
+        val.textContent = String(hz);
+    }
 
     bindPanelResizer('rings.web.panelSplit');
 
@@ -80,6 +130,36 @@
     })();
 
     // --- Manual motor (buttons + WASD) ------------------------------------
+    function motorLabel(motorId) {
+        const key = motorId.replace(/^motor_/, '');
+        const labels = {
+            forward: 'Forward (W)',
+            backward: 'Back (S)',
+            left: 'Left (A)',
+            right: 'Right (D)',
+            coast: 'Coast (S)',
+        };
+        return labels[key] || key.replaceAll('_', ' ');
+    }
+
+    function renderManualMotors() {
+        const row = document.getElementById('manual-motors');
+        if (!row) return;
+        const wanted = currentMotors.join('|');
+        if (row.dataset.motors === wanted) return;
+        row.dataset.motors = wanted;
+        row.innerHTML = '';
+        for (const motorId of currentMotors) {
+            const key = motorId.replace(/^motor_/, '');
+            const btn = document.createElement('button');
+            btn.className = 'motor';
+            btn.dataset.motor = key;
+            btn.textContent = motorLabel(motorId);
+            bindMotorButton(btn, key);
+            row.appendChild(btn);
+        }
+    }
+
     function setMotor(name, on) {
         const msg = {}; msg[name] = on;
         socket.emit('manual_motor', msg);
@@ -87,45 +167,74 @@
             b.classList.toggle('held', on);
         });
     }
-    document.querySelectorAll('button.motor').forEach((btn) => {
-        const name = btn.dataset.motor;
+
+    function bindMotorButton(btn, name) {
         btn.addEventListener('mousedown',  () => setMotor(name, true));
         btn.addEventListener('mouseup',    () => setMotor(name, false));
         btn.addEventListener('mouseleave', () => setMotor(name, false));
         btn.addEventListener('touchstart', (e) => { e.preventDefault(); setMotor(name, true); });
         btn.addEventListener('touchend',   (e) => { e.preventDefault(); setMotor(name, false); });
-    });
-    const KEY_MAP = { w: 'forward', s: 'backward', a: 'left', d: 'right' };
+    }
+
+    renderManualMotors();
+    const KEY_MAP = { w: ['forward'], s: ['backward', 'coast'], a: ['left'], d: ['right'] };
     const pressed = new Set();
     window.addEventListener('keydown', (e) => {
         if (e.target.matches('input, textarea, select')) return;
         const k = e.key.toLowerCase();
-        if (KEY_MAP[k] && !pressed.has(k)) {
+        const motor = motorForKey(k);
+        if (motor && !pressed.has(k)) {
             pressed.add(k);
-            setMotor(KEY_MAP[k], true);
+            setMotor(motor, true);
         }
     });
     window.addEventListener('keyup', (e) => {
         const k = e.key.toLowerCase();
-        if (KEY_MAP[k]) {
+        const motor = motorForKey(k);
+        if (motor) {
             pressed.delete(k);
-            setMotor(KEY_MAP[k], false);
+            setMotor(motor, false);
         }
     });
+
+    function motorForKey(key) {
+        const options = KEY_MAP[key] || [];
+        for (const name of options) {
+            if (currentMotors.includes(`motor_${name}`)) return name;
+        }
+        return null;
+    }
 
     // --- Network: Load (bundled examples), Export, Import -----------------
     const loadDlg = document.getElementById('load-dialog');
     const loadList = document.getElementById('load-list');
 
-    async function fetchManifest() {
+    async function fetchSavedGroups() {
         try {
             const r = await fetch('saved_networks/manifest.json', { cache: 'no-store' });
-            if (!r.ok) return [];
+            if (!r.ok) return {};
             const j = await r.json();
-            return Array.isArray(j.files) ? j.files : [];
+            if (j.groups && typeof j.groups === 'object') return j.groups;
+            const groups = { BUG: [], CartPole: [], MountainCar: [] };
+            const files = Array.isArray(j.files) ? j.files : [];
+            await Promise.all(files.map(async (name) => {
+                let task = 'BUG';
+                try {
+                    const res = await fetch(`saved_networks/${name}`, { cache: 'no-store' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        task = data.task || 'BUG';
+                    }
+                } catch (e) {
+                    console.warn(`failed to inspect ${name}:`, e);
+                }
+                if (!groups[task]) groups[task] = [];
+                groups[task].push(name);
+            }));
+            return groups;
         } catch (e) {
             console.warn('manifest fetch failed:', e);
-            return [];
+            return {};
         }
     }
 
@@ -140,28 +249,35 @@
     document.getElementById('net-load').addEventListener('click', async () => {
         loadList.innerHTML = '<li>loading…</li>';
         loadDlg.showModal();
-        const files = await fetchManifest();
+        const groups = await fetchSavedGroups();
         loadList.innerHTML = '';
-        if (!files.length) {
+        if (!Object.values(groups).some(files => files.length)) {
             loadList.innerHTML = '<li>manifest is empty</li>';
             return;
         }
-        for (const f of files) {
-            const li = document.createElement('li');
-            li.textContent = f;
-            li.addEventListener('click', async () => {
-                loadDlg.close();
-                try { await loadBundled(f); }
-                catch (e) { alert(`Failed to load ${f}: ${e.message}`); }
-            });
-            loadList.appendChild(li);
+        for (const [task, files] of Object.entries(groups)) {
+            if (!files.length) continue;
+            const header = document.createElement('li');
+            header.className = 'load-section';
+            header.textContent = task;
+            loadList.appendChild(header);
+            for (const f of files) {
+                const li = document.createElement('li');
+                li.textContent = f;
+                li.addEventListener('click', async () => {
+                    loadDlg.close();
+                    try { await loadBundled(f); }
+                    catch (e) { alert(`Failed to load ${f}: ${e.message}`); }
+                });
+                loadList.appendChild(li);
+            }
         }
     });
 
     // Export current topology as a downloadable JSON file
     document.getElementById('net-export').addEventListener('click', () => {
-        const top = window.editorView ? window.editorView.currentTopology()
-                                       : window.simEngine.getTopology();
+        const top = window.simEngine ? window.simEngine.getTopology()
+                                     : window.editorView.currentTopology();
         const blob = new Blob([JSON.stringify(top, null, 2)], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);

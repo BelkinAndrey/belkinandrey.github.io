@@ -18,10 +18,10 @@
             <input type="range" id="sim-hz" min="1" max="100" step="1" value="100">
             <span id="sim-hz-val">100</span> Hz
         </label>
-        <span class="stat">food: <span id="stat-food">0</span></span>
-        <span class="stat">hp: <span id="stat-hp">1.00</span></span>
-        <span class="stat">hunger: <span id="stat-hunger">0.00</span></span>
-        <span class="stat">fatigue: <span id="stat-fatigue">0.00</span></span>
+        <span class="stat bug-only">food: <span id="stat-food">0</span></span>
+        <span class="stat bug-only">hp: <span id="stat-hp">1.00</span></span>
+        <span class="stat bug-only">hunger: <span id="stat-hunger">0.00</span></span>
+        <span class="stat bug-only">fatigue: <span id="stat-fatigue">0.00</span></span>
         <span class="stat">t: <span id="stat-time">0.0</span> s</span>
     </div>
 </header>
@@ -30,9 +30,16 @@
 
     <section class="panel env-panel">
         <div class="panel-head">
-            <h2>1 · Agent environment</h2>
+            <div class="panel-title-row">
+                <h2>1 · Agent environment</h2>
+                <label class="task-select">Environment
+                    <select id="env-task">
+                        <option value="BUG">BUG</option>
+                    </select>
+                </label>
+            </div>
             <div class="toolbar">
-                <div class="tool-group" id="env-tool-group">
+                <div class="tool-group bug-only" id="env-tool-group">
                     <button class="tool-btn active" data-tool="select">↖ Cursor</button>
                     <button class="tool-btn" data-tool="food">🟢 Food</button>
                     <button class="tool-btn" data-tool="threat">🔴 Threat</button>
@@ -40,9 +47,9 @@
                     <button class="tool-btn" data-tool="agent">🐞 Agent</button>
                     <button class="tool-btn" data-tool="erase">✕ Erase</button>
                 </div>
-                <button id="env-clear-food">clear food</button>
-                <button id="env-clear-threat">clear threats</button>
-                <button id="env-clear-obs">clear obstacles</button>
+                <button class="bug-only" id="env-clear-food">clear food</button>
+                <button class="bug-only" id="env-clear-threat">clear threats</button>
+                <button class="bug-only" id="env-clear-obs">clear obstacles</button>
                 <button id="env-reset-view" title="Reset zoom">⊙ 1:1</button>
             </div>
         </div>
@@ -50,7 +57,7 @@
             <canvas id="env-canvas" width="1100" height="700"></canvas>
         </div>
         <div class="env-tools">
-            <div class="slider-row">
+            <div class="slider-row bug-only" id="bug-world-controls">
                 <label>food in arena
                     <input type="range" id="food-target" min="0" max="30" step="1" value="5">
                     <span id="food-target-val">5</span>
@@ -76,8 +83,15 @@
                     <span id="fatigue-decay-val">0.100</span>
                 </label>
             </div>
+            <div class="slider-row gym-only" id="gym-world-controls">
+                <label>environment rate
+                    <input type="range" id="gym-env-hz" min="1" max="240" step="1" value="30">
+                    <span id="gym-env-hz-val">30</span> Hz
+                </label>
+            </div>
             <div class="manual-row">
                 <span class="hint">Manual motor control (press and hold):</span>
+                <span id="manual-motors"></span>
                 <button class="motor" data-motor="forward">↑ Forward (W)</button>
                 <button class="motor" data-motor="backward">↓ Backward (S)</button>
                 <button class="motor" data-motor="left">↶ Left (A)</button>

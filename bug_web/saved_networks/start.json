@@ -243,5 +243,7 @@
       "color": "#f0690f",
       "comment": ""
     }
-  ]
+  ],
+  "format_version": 2,
+  "task": "BUG"
 }

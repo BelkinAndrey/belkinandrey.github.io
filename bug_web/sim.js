@@ -25,6 +25,12 @@
         while (v === 0) v = Math.random();
         return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
     }
+    function clamp(x, lo, hi) {
+        return Math.max(lo, Math.min(hi, x));
+    }
+    function uniform(lo, hi) {
+        return lo + Math.random() * (hi - lo);
+    }
     function preservedKindsMap(nid) {
         if (nid.startsWith('sensor_') || nid.startsWith('lidar_')) return 'sensor';
         if (nid.startsWith('motor_')) return 'motor';
@@ -458,6 +464,8 @@
 
     class Environment {
         constructor(width = 1100, height = 700) {
+            this.taskId = 'BUG';
+            this.kind = 'bug';
             this.width = width;
             this.height = height;
             this.obstacles = [];
@@ -494,6 +502,7 @@
             this.fatigueActionGain = 0.02;
             this.fatigueDecay = 0.10;
             this._nextId = 1;
+            this.lastReward = 0.0;
         }
 
         _genId() { return ++this._nextId; }
@@ -640,6 +649,7 @@
             // Hunger creeps; fatigue decays
             a.hunger  = Math.min(1, a.hunger  + this.hungerRate  * dt);
             a.fatigue = Math.max(0, a.fatigue - this.fatigueDecay * dt);
+            this.lastReward = (a.food_eaten > 0 ? 0 : 0) - 0.01 * a.hunger;
         }
 
         _spawnRandomFood() {
@@ -670,6 +680,14 @@
             if (fwd)  this._tryMove(a.speedPerSpike);
             if (back) this._tryMove(-a.speedPerSpike * 0.7);
         }
+        applyMotorActions(active) {
+            this.applyMotor(
+                !!active.motor_forward,
+                !!active.motor_backward,
+                !!active.motor_left,
+                !!active.motor_right
+            );
+        }
         _tryMove(dist) {
             const a = this.agent;
             const nx = a.x + Math.cos(a.heading) * dist;
@@ -686,7 +704,10 @@
         snapshot() {
             const a = this.agent;
             return {
+                task_id: this.taskId,
+                kind: this.kind,
                 width: this.width, height: this.height,
+                reward: this.lastReward,
                 agent: {
                     x: a.x, y: a.y, heading: a.heading, radius: a.radius,
                     lidar_angles: a.lidar_angles.slice(),
@@ -713,11 +734,310 @@
         }
     }
 
+    // ============================================================ Classic control clones
+
+    class CartPoleEnvironment {
+        constructor() {
+            this.taskId = 'CartPole';
+            this.gymId = 'CartPole-v1-compatible';
+            this.kind = 'gym';
+            this.actionNames = ['left', 'right'];
+            this.defaultAction = 0;
+            this.gravity = 9.8;
+            this.massCart = 1.0;
+            this.massPole = 0.1;
+            this.totalMass = this.massPole + this.massCart;
+            this.length = 0.5;
+            this.poleMassLength = this.massPole * this.length;
+            this.forceMag = 10.0;
+            this.tau = 0.02;
+            this.thetaThreshold = 12 * 2 * PI / 360;
+            this.xThreshold = 2.4;
+            this.maxEpisodeSteps = 500;
+            this.obs = [0, 0, 0, 0];
+            this.resetStats();
+            this.resetAgent();
+        }
+        resetStats() {
+            this.lastReward = 0;
+            this.episodeReturn = 0;
+            this.episodeSteps = 0;
+            this.episodeIndex = 0;
+            this.lastDone = false;
+            this.lastTerminated = false;
+            this.lastTruncated = false;
+            this.lastSuccess = false;
+            this.lastEpisodeSteps = 0;
+            this.lastEpisodeReturn = 0;
+            this.bestSteps = 0;
+            this.bestReturn = -Infinity;
+            this.pendingAction = this.defaultAction;
+            this.lastAction = this.defaultAction;
+        }
+        resetAgent() {
+            this.obs = [uniform(-0.05, 0.05), uniform(-0.05, 0.05), uniform(-0.05, 0.05), uniform(-0.05, 0.05)];
+            this.lastReward = 0;
+            this.episodeReturn = 0;
+            this.episodeSteps = 0;
+            this.lastDone = false;
+            this.lastTerminated = false;
+            this.lastTruncated = false;
+            this.lastSuccess = false;
+            this.pendingAction = this.defaultAction;
+            this.lastAction = this.defaultAction;
+        }
+        applyMotorActions(active) {
+            const activeIdx = [];
+            for (let i = 0; i < this.actionNames.length; i++) {
+                if (active[`motor_${this.actionNames[i]}`]) activeIdx.push(i);
+            }
+            if (activeIdx.length) this.pendingAction = activeIdx[activeIdx.length - 1];
+        }
+        step(_dt) {
+            this.lastAction = this.pendingAction;
+            const [x, xDot, theta, thetaDot] = this.obs;
+            const force = this.pendingAction === 1 ? this.forceMag : -this.forceMag;
+            const cosTheta = Math.cos(theta);
+            const sinTheta = Math.sin(theta);
+            const temp = (force + this.poleMassLength * thetaDot * thetaDot * sinTheta) / this.totalMass;
+            const thetaAcc = (this.gravity * sinTheta - cosTheta * temp) /
+                (this.length * (4.0 / 3.0 - this.massPole * cosTheta * cosTheta / this.totalMass));
+            const xAcc = temp - this.poleMassLength * thetaAcc * cosTheta / this.totalMass;
+            const nx = x + this.tau * xDot;
+            const nxDot = xDot + this.tau * xAcc;
+            const nt = theta + this.tau * thetaDot;
+            const ntDot = thetaDot + this.tau * thetaAcc;
+            this.obs = [nx, nxDot, nt, ntDot];
+            this.episodeSteps++;
+            const terminated = nx < -this.xThreshold || nx > this.xThreshold ||
+                nt < -this.thetaThreshold || nt > this.thetaThreshold;
+            const truncated = this.episodeSteps >= this.maxEpisodeSteps;
+            const done = terminated || truncated;
+            this.lastReward = 1.0;
+            this.episodeReturn += this.lastReward;
+            this.lastDone = done;
+            this.lastTerminated = terminated;
+            this.lastTruncated = truncated;
+            this.lastSuccess = truncated && !terminated;
+            if (done) this.finishEpisode();
+            return { reward: this.lastReward, done };
+        }
+        finishEpisode() {
+            const steps = this.episodeSteps;
+            const ret = this.episodeReturn;
+            this.lastEpisodeSteps = steps;
+            this.lastEpisodeReturn = ret;
+            if (steps > this.bestSteps) this.bestSteps = steps;
+            if (ret > this.bestReturn) this.bestReturn = ret;
+            this.episodeIndex++;
+            this.obs = [uniform(-0.05, 0.05), uniform(-0.05, 0.05), uniform(-0.05, 0.05), uniform(-0.05, 0.05)];
+            this.episodeSteps = 0;
+            this.episodeReturn = 0;
+        }
+        snapshot() {
+            const [x, _xDot, theta, _thetaDot] = this.obs;
+            return {
+                task: 'cartpole',
+                task_id: this.taskId,
+                gym_id: this.gymId,
+                kind: this.kind,
+                width: 1100,
+                height: 700,
+                observation: this.obs.slice(),
+                reward: this.lastReward,
+                episode_return: this.episodeReturn,
+                episode_steps: this.episodeSteps,
+                episode_index: this.episodeIndex,
+                episode: this.episodeIndex,
+                steps: this.episodeSteps,
+                last_episode_steps: this.lastEpisodeSteps,
+                last_episode_return: this.lastEpisodeReturn,
+                best_steps: this.bestSteps,
+                best_score: this.bestReturn,
+                done: this.lastDone,
+                terminated: this.lastTerminated,
+                truncated: this.lastTruncated,
+                success: this.lastSuccess,
+                done_reason: this.doneReason(),
+                action: this.lastAction,
+                action_name: this.actionNames[this.lastAction],
+                x,
+                theta,
+                x_limit: this.xThreshold,
+                pole_half_len: this.length,
+                force_dir: this.lastAction === 0 ? -1 : 1,
+                agent: { health: 1, hunger: 0, fatigue: 0, food_eaten: Math.round(this.episodeReturn) },
+                foods: [],
+                threats: [],
+                obstacles: [],
+            };
+        }
+        doneReason() {
+            if (!this.lastDone) return '';
+            if (this.lastSuccess) return 'time limit';
+            if (this.lastTerminated) return 'fallen';
+            return 'done';
+        }
+        resize() {}
+        addFood() {}
+        addThreat() {}
+        addObstacle() {}
+        removeObject() {}
+        clearObjects() {}
+    }
+
+    class MountainCarEnvironment {
+        constructor() {
+            this.taskId = 'MountainCar';
+            this.gymId = 'MountainCar-v0-compatible';
+            this.kind = 'gym';
+            this.actionNames = ['left', 'coast', 'right'];
+            this.defaultAction = 1;
+            this.minPosition = -1.2;
+            this.maxPosition = 0.6;
+            this.maxSpeed = 0.07;
+            this.goalPosition = 0.5;
+            this.goalVelocity = 0.0;
+            this.force = 0.001;
+            this.gravity = 0.0025;
+            this.maxEpisodeSteps = 200;
+            this.positionNeutral = -0.5;
+            this.obs = [-0.5, 0];
+            this.resetStats();
+            this.resetAgent();
+        }
+        resetStats() {
+            this.lastReward = 0;
+            this.episodeReturn = 0;
+            this.episodeSteps = 0;
+            this.episodeIndex = 0;
+            this.lastDone = false;
+            this.lastTerminated = false;
+            this.lastTruncated = false;
+            this.lastSuccess = false;
+            this.lastEpisodeSteps = 0;
+            this.lastEpisodeReturn = 0;
+            this.bestSteps = 0;
+            this.bestReturn = -Infinity;
+            this.pendingAction = this.defaultAction;
+            this.lastAction = this.defaultAction;
+        }
+        resetAgent() {
+            const pos = uniform(-0.6, -0.4);
+            this.obs = [pos, 0.0];
+            this.positionNeutral = pos;
+            this.lastReward = 0;
+            this.episodeReturn = 0;
+            this.episodeSteps = 0;
+            this.lastDone = false;
+            this.lastTerminated = false;
+            this.lastTruncated = false;
+            this.lastSuccess = false;
+            this.pendingAction = this.defaultAction;
+            this.lastAction = this.defaultAction;
+        }
+        applyMotorActions(active) {
+            const activeIdx = [];
+            for (let i = 0; i < this.actionNames.length; i++) {
+                if (active[`motor_${this.actionNames[i]}`]) activeIdx.push(i);
+            }
+            if (activeIdx.length) this.pendingAction = activeIdx[activeIdx.length - 1];
+        }
+        step(_dt) {
+            this.lastAction = this.pendingAction;
+            let [pos, vel] = this.obs;
+            vel += (this.pendingAction - 1) * this.force + Math.cos(3 * pos) * (-this.gravity);
+            vel = clamp(vel, -this.maxSpeed, this.maxSpeed);
+            pos += vel;
+            pos = clamp(pos, this.minPosition, this.maxPosition);
+            if (pos === this.minPosition && vel < 0) vel = 0;
+            this.obs = [pos, vel];
+            this.episodeSteps++;
+            const terminated = pos >= this.goalPosition && vel >= this.goalVelocity;
+            const truncated = this.episodeSteps >= this.maxEpisodeSteps;
+            const done = terminated || truncated;
+            this.lastReward = -1.0;
+            this.episodeReturn += this.lastReward;
+            this.lastDone = done;
+            this.lastTerminated = terminated;
+            this.lastTruncated = truncated;
+            this.lastSuccess = terminated && !truncated;
+            if (done) this.finishEpisode();
+            return { reward: this.lastReward, done };
+        }
+        finishEpisode() {
+            const steps = this.episodeSteps;
+            const ret = this.episodeReturn;
+            this.lastEpisodeSteps = steps;
+            this.lastEpisodeReturn = ret;
+            if (ret > this.bestReturn) this.bestReturn = ret;
+            if (this.lastSuccess && (this.bestSteps <= 0 || steps < this.bestSteps)) this.bestSteps = steps;
+            this.episodeIndex++;
+            const pos = uniform(-0.6, -0.4);
+            this.obs = [pos, 0.0];
+            this.positionNeutral = pos;
+            this.episodeSteps = 0;
+            this.episodeReturn = 0;
+        }
+        snapshot() {
+            const [pos, vel] = this.obs;
+            return {
+                task: 'mountain_car',
+                task_id: this.taskId,
+                gym_id: this.gymId,
+                kind: this.kind,
+                width: 1100,
+                height: 700,
+                observation: this.obs.slice(),
+                reward: this.lastReward,
+                episode_return: this.episodeReturn,
+                episode_steps: this.episodeSteps,
+                episode_index: this.episodeIndex,
+                episode: this.episodeIndex,
+                steps: this.episodeSteps,
+                last_episode_steps: this.lastEpisodeSteps,
+                last_episode_return: this.lastEpisodeReturn,
+                best_steps: this.bestSteps,
+                best_score: this.bestReturn,
+                done: this.lastDone,
+                terminated: this.lastTerminated,
+                truncated: this.lastTruncated,
+                success: this.lastSuccess,
+                done_reason: this.doneReason(),
+                action: this.lastAction - 1,
+                action_name: this.actionNames[this.lastAction],
+                pos,
+                vel,
+                min_pos: this.minPosition,
+                max_pos: this.maxPosition,
+                goal_pos: this.goalPosition,
+                solved: this.lastSuccess,
+                agent: { health: 1, hunger: 0, fatigue: 0, food_eaten: Math.round(this.episodeReturn) },
+                foods: [],
+                threats: [],
+                obstacles: [],
+            };
+        }
+        doneReason() {
+            if (!this.lastDone) return '';
+            if (this.lastSuccess) return 'goal';
+            if (this.lastTruncated) return 'time limit';
+            return 'done';
+        }
+        resize() {}
+        addFood() {}
+        addThreat() {}
+        addObstacle() {}
+        removeObject() {}
+        clearObjects() {}
+    }
+
     // ============================================================ App glue
 
     const NEURON_CAPACITY = 512;
     const SIM_DT     = 0.01;     // 10 ms LIF time step
     const SIM_HZ_MAX = 100;
+    const GYM_ENV_HZ_MAX = 240;
 
     // Sensor signal → LIF input current (same constants as app.py)
     const I_MAX = 1.0;
@@ -729,7 +1049,60 @@
     const MANUAL_MOTOR_DRIVE = 1.5;
     const SENSOR_LEAK = 0.02;
     const SENSOR_REFRACTORY = 2;
+    const GYM_SENSOR_REFRACTORY = 0;
     const MOTOR_LEAK = 0.12;
+
+    const TASK_SPECS = {
+        BUG: {
+            label: 'BUG',
+            kind: 'bug',
+            factory: () => new Environment(),
+            motors: ['motor_forward', 'motor_backward', 'motor_left', 'motor_right'],
+            defaults: [
+                ['sensor_food_left',    'Food L',   'sensor', 60,  60],
+                ['sensor_food_right',   'Food R',   'sensor', 60, 110],
+                ['sensor_threat_left',  'Threat L', 'sensor', 60, 170],
+                ['sensor_threat_right', 'Threat R', 'sensor', 60, 220],
+                ['sensor_hunger',       'Hunger',   'sensor', 60, 280],
+                ['sensor_fatigue',      'Fatigue',  'sensor', 60, 330],
+                ['lidar_0',             'Lidar 1',  'sensor', 60, 400],
+                ['lidar_1',             'Lidar 2',  'sensor', 60, 440],
+                ['lidar_2',             'Lidar 3',  'sensor', 60, 480],
+                ['lidar_3',             'Lidar 4',  'sensor', 60, 520],
+                ['lidar_4',             'Lidar 5',  'sensor', 60, 560],
+                ['motor_forward',       'Forward',  'motor', 720, 100],
+                ['motor_backward',      'Back',     'motor', 720, 200],
+                ['motor_left',          'Turn L',   'motor', 720, 300],
+                ['motor_right',         'Turn R',   'motor', 720, 400],
+            ],
+        },
+        CartPole: {
+            label: 'CartPole',
+            kind: 'gym',
+            factory: () => new CartPoleEnvironment(),
+            motors: ['motor_left', 'motor_right'],
+            rewardMode: 'survival_up',
+            rewardSteps: 500,
+            obs: [
+                ['cart_position', 'Cart X', 2.4],
+                ['cart_velocity', 'Cart V', 3.0],
+                ['pole_angle', 'Pole angle', 0.42],
+                ['pole_angular_velocity', 'Pole ang V', 3.5],
+            ],
+        },
+        MountainCar: {
+            label: 'MountainCar',
+            kind: 'gym',
+            factory: () => new MountainCarEnvironment(),
+            motors: ['motor_left', 'motor_coast', 'motor_right'],
+            rewardMode: 'time_budget_down',
+            rewardSteps: 200,
+            obs: [
+                ['position', 'Position', 1.2],
+                ['velocity', 'Velocity', 0.07],
+            ],
+        },
+    };
 
     function signalToCurrent(raw, strongRef) {
         if (strongRef <= 0) return 0;
@@ -739,101 +1112,235 @@
     }
 
     const snn = new SpikingNetwork(NEURON_CAPACITY);
-    const env = new Environment();
-    const manualMotor = { forward: false, backward: false, left: false, right: false };
+    let currentTask = 'BUG';
+    let env = TASK_SPECS[currentTask].factory();
+    const manualMotor = {};
     const DEFAULT_NEURON_IDS = new Set();
 
-    function buildDefaultNetwork() {
-        const defs = [
-            ['sensor_food_left',    'Food L',   'sensor', 60,  60],
-            ['sensor_food_right',   'Food R',   'sensor', 60, 110],
-            ['sensor_threat_left',  'Threat L', 'sensor', 60, 170],
-            ['sensor_threat_right', 'Threat R', 'sensor', 60, 220],
-            ['sensor_hunger',       'Hunger',   'sensor', 60, 280],
-            ['sensor_fatigue',      'Fatigue',  'sensor', 60, 330],
-            ['lidar_0',             'Lidar 1',  'sensor', 60, 400],
-            ['lidar_1',             'Lidar 2',  'sensor', 60, 440],
-            ['lidar_2',             'Lidar 3',  'sensor', 60, 480],
-            ['lidar_3',             'Lidar 4',  'sensor', 60, 520],
-            ['lidar_4',             'Lidar 5',  'sensor', 60, 560],
-            ['motor_forward',       'Forward',  'motor', 720, 100],
-            ['motor_backward',      'Back',     'motor', 720, 200],
-            ['motor_left',          'Turn L',   'motor', 720, 300],
-            ['motor_right',         'Turn R',   'motor', 720, 400],
-        ];
+    function normalizeTask(task) {
+        return TASK_SPECS[task] ? task : 'BUG';
+    }
+
+    function gymDefaultNeurons(task) {
+        const spec = TASK_SPECS[task];
+        const defs = [];
+        let y = 70;
+        for (const [obsId, label] of spec.obs) {
+            defs.push([`sensor_${obsId}_pos`, `${label} +`, 'sensor', 60, y]);
+            y += 45;
+            defs.push([`sensor_${obsId}_neg`, `${label} -`, 'sensor', 60, y]);
+            y += 55;
+        }
+        defs.push(['sensor_reward', 'Reward', 'sensor', 60, y + 20]);
+        let my = 120;
+        for (const motorId of spec.motors) {
+            const label = motorId.replace(/^motor_/, '').replaceAll('_', ' ')
+                .replace(/\b\w/g, ch => ch.toUpperCase());
+            defs.push([motorId, label, 'motor', 720, my]);
+            my += 90;
+        }
+        return defs;
+    }
+
+    function defaultDefsFor(task) {
+        const spec = TASK_SPECS[task];
+        return spec.kind === 'gym' ? gymDefaultNeurons(task) : spec.defaults.slice();
+    }
+
+    function defaultNeuronParams(task, nid, kind) {
+        return {
+            threshold: task === 'MountainCar' && nid === 'sensor_reward' ? 10.0 : 1.0,
+            refractory: kind === 'sensor'
+                ? (TASK_SPECS[task].kind === 'gym' ? GYM_SENSOR_REFRACTORY : SENSOR_REFRACTORY)
+                : 3,
+        };
+    }
+
+    function buildDefaultNetwork(task = currentTask, reset = false) {
+        task = normalizeTask(task);
+        if (reset) snn.loadJson({ neurons: [], synapses: [], groups: [] }, new Set());
+        DEFAULT_NEURON_IDS.clear();
+        const defs = defaultDefsFor(task);
         for (const [id, label, kind, x, y] of defs) {
+            DEFAULT_NEURON_IDS.add(id);
+            if (snn.idToIdx.has(id)) continue;
+            const params = defaultNeuronParams(task, id, kind);
             snn.addNeuron(id, {
                 label, kind, x, y,
-                threshold: 1.0,
+                threshold: params.threshold,
                 leak: kind === 'motor' ? MOTOR_LEAK : SENSOR_LEAK,
                 v_reset: 0,
-                refractory: kind === 'sensor' ? SENSOR_REFRACTORY : 3,
+                refractory: params.refractory,
                 noise_std: 0,
             });
-            DEFAULT_NEURON_IDS.add(id);
         }
+        enforceDefaultReceptorParams(task);
     }
     buildDefaultNetwork();
 
     function buildOneDefault(nid) {
-        const kind = preservedKindsMap(nid);
+        const rec = defaultDefsFor(currentTask).find(d => d[0] === nid);
+        const kind = rec ? rec[2] : preservedKindsMap(nid);
+        const label = rec ? rec[1] : nid;
+        const x = rec ? rec[3] : 300;
+        const y = rec ? rec[4] : 300;
+        const params = defaultNeuronParams(currentTask, nid, kind);
         snn.addNeuron(nid, {
-            label: nid, kind, x: 300, y: 300,
-            threshold: 1.0,
+            label, kind, x, y,
+            threshold: params.threshold,
             leak: kind === 'motor' ? MOTOR_LEAK : SENSOR_LEAK,
             v_reset: 0,
-            refractory: kind === 'sensor' ? SENSOR_REFRACTORY : 3,
+            refractory: params.refractory,
             noise_std: 0,
         });
+    }
+
+    function enforceDefaultReceptorParams(task = currentTask) {
+        if (TASK_SPECS[task].kind !== 'gym') return;
+        for (const id of DEFAULT_NEURON_IDS) {
+            const rec = defaultDefsFor(task).find(d => d[0] === id);
+            if (rec && rec[2] === 'sensor') {
+                const params = defaultNeuronParams(task, id, rec[2]);
+                snn.updateNeuron(id, { threshold: params.threshold, refractory: params.refractory });
+            }
+        }
+    }
+
+    function resetManualMotor() {
+        for (const k of Object.keys(manualMotor)) delete manualMotor[k];
+        for (const motorId of TASK_SPECS[currentTask].motors) {
+            manualMotor[motorId.replace(/^motor_/, '')] = false;
+        }
+    }
+    resetManualMotor();
+
+    function gymRewardSignal(task) {
+        const spec = TASK_SPECS[task];
+        const steps = env.lastDone ? (env.lastEpisodeSteps || 0) : (env.episodeSteps || 0);
+        const phase = clamp(steps / Math.max(1, spec.rewardSteps || 1), 0, 1);
+        if (spec.rewardMode === 'survival_up') return phase;
+        if (spec.rewardMode === 'time_budget_down') return 1.0 - phase;
+        return clamp(env.lastReward || 0, 0, 1);
+    }
+
+    function gymObservationComponents(task, obsId, raw, strongRef) {
+        if (task === 'MountainCar' && obsId === 'position') {
+            const minPos = env.minPosition ?? -1.2;
+            const maxPos = env.maxPosition ?? 0.6;
+            const neutral = env.positionNeutral ?? -0.5;
+            const pos = Math.max(0, raw - neutral);
+            const neg = Math.max(0, neutral - raw);
+            return [pos, neg, Math.max(0.001, maxPos - neutral), Math.max(0.001, neutral - minPos)];
+        }
+        return [Math.max(0, raw), Math.max(0, -raw), strongRef, strongRef];
     }
 
     const extBuf = new Float32Array(NEURON_CAPACITY);
     function computeExternalInput() {
         extBuf.fill(0);
-        const a = env.agent;
         const idx = (nid) => snn.idToIdx.get(nid);
         let i;
-        if ((i = idx('sensor_food_left'))   !== undefined) extBuf[i] = signalToCurrent(a.food_left,   FOOD_REF_STRONG);
-        if ((i = idx('sensor_food_right'))  !== undefined) extBuf[i] = signalToCurrent(a.food_right,  FOOD_REF_STRONG);
-        if ((i = idx('sensor_threat_left')) !== undefined) extBuf[i] = signalToCurrent(a.threat_left, THREAT_REF_STRONG);
-        if ((i = idx('sensor_threat_right'))!== undefined) extBuf[i] = signalToCurrent(a.threat_right,THREAT_REF_STRONG);
-        if ((i = idx('sensor_hunger'))      !== undefined) extBuf[i] = signalToCurrent(a.hunger,      HUNGER_REF_STRONG);
-        if ((i = idx('sensor_fatigue'))     !== undefined) extBuf[i] = signalToCurrent(a.fatigue,     FATIGUE_REF_STRONG);
-        for (let k = 0; k < a.lidarCount; k++) {
-            if ((i = idx(`lidar_${k}`)) !== undefined) {
-                const prox = Math.max(0, 1 - a.lidar_distances[k] / a.lidarRange);
-                extBuf[i] = signalToCurrent(prox, LIDAR_REF_STRONG);
+        if (currentTask === 'BUG') {
+            const a = env.agent;
+            if ((i = idx('sensor_food_left'))   !== undefined) extBuf[i] = signalToCurrent(a.food_left,   FOOD_REF_STRONG);
+            if ((i = idx('sensor_food_right'))  !== undefined) extBuf[i] = signalToCurrent(a.food_right,  FOOD_REF_STRONG);
+            if ((i = idx('sensor_threat_left')) !== undefined) extBuf[i] = signalToCurrent(a.threat_left, THREAT_REF_STRONG);
+            if ((i = idx('sensor_threat_right'))!== undefined) extBuf[i] = signalToCurrent(a.threat_right,THREAT_REF_STRONG);
+            if ((i = idx('sensor_hunger'))      !== undefined) extBuf[i] = signalToCurrent(a.hunger,      HUNGER_REF_STRONG);
+            if ((i = idx('sensor_fatigue'))     !== undefined) extBuf[i] = signalToCurrent(a.fatigue,     FATIGUE_REF_STRONG);
+            for (let k = 0; k < a.lidarCount; k++) {
+                if ((i = idx(`lidar_${k}`)) !== undefined) {
+                    const prox = Math.max(0, 1 - a.lidar_distances[k] / a.lidarRange);
+                    extBuf[i] = signalToCurrent(prox, LIDAR_REF_STRONG);
+                }
+            }
+        } else {
+            const spec = TASK_SPECS[currentTask];
+            for (let k = 0; k < spec.obs.length && k < env.obs.length; k++) {
+                const [obsId, _label, strongRef] = spec.obs[k];
+                const [pos, neg, posRef, negRef] = gymObservationComponents(currentTask, obsId, +env.obs[k], strongRef);
+                if ((i = idx(`sensor_${obsId}_pos`)) !== undefined) extBuf[i] = signalToCurrent(pos, posRef);
+                if ((i = idx(`sensor_${obsId}_neg`)) !== undefined) extBuf[i] = signalToCurrent(neg, negRef);
             }
         }
-        if (manualMotor.forward  && (i = idx('motor_forward'))  !== undefined) extBuf[i] += MANUAL_MOTOR_DRIVE;
-        if (manualMotor.backward && (i = idx('motor_backward')) !== undefined) extBuf[i] += MANUAL_MOTOR_DRIVE;
-        if (manualMotor.left     && (i = idx('motor_left'))     !== undefined) extBuf[i] += MANUAL_MOTOR_DRIVE;
-        if (manualMotor.right    && (i = idx('motor_right'))    !== undefined) extBuf[i] += MANUAL_MOTOR_DRIVE;
+        if ((i = idx('sensor_reward')) !== undefined && currentTask !== 'BUG') {
+            extBuf[i] = signalToCurrent(gymRewardSignal(currentTask), 1.0);
+        }
+        for (const motorId of TASK_SPECS[currentTask].motors) {
+            const key = motorId.replace(/^motor_/, '');
+            if (manualMotor[key] && (i = idx(motorId)) !== undefined) extBuf[i] += MANUAL_MOTOR_DRIVE;
+        }
         return extBuf;
+    }
+
+    function activeMotorSpikes() {
+        const active = {};
+        const motors = TASK_SPECS[currentTask].motors;
+        if (currentTask !== 'BUG') {
+            let anyManual = false;
+            for (const motorId of motors) {
+                const key = motorId.replace(/^motor_/, '');
+                active[motorId] = !!manualMotor[key];
+                anyManual = anyManual || active[motorId];
+            }
+            if (anyManual) return active;
+        }
+        for (const motorId of motors) {
+            const idx = snn.idToIdx.get(motorId);
+            active[motorId] = idx !== undefined && snn.spikes[idx] === 1;
+        }
+        return active;
+    }
+
+    function currentNetworkPayload() {
+        const payload = snn.topology();
+        payload.task = currentTask;
+        payload.format_version = 2;
+        return payload;
+    }
+
+    function switchTask(task, resetNetwork = false) {
+        currentTask = normalizeTask(task);
+        env = TASK_SPECS[currentTask].factory();
+        window.envInstance = env;
+        simTime = 0;
+        gymEnvAccumWall = 0;
+        resetManualMotor();
+        buildDefaultNetwork(currentTask, resetNetwork);
     }
 
     // -------------------------------------------------- main loop
 
     let running = true;
     let simHz   = SIM_HZ_MAX;
+    let gymEnvHz = 30;
     let simTime = 0;
     let simAccumWall = 0;
+    let gymEnvAccumWall = 0;
     let lastTickWall = performance.now();
     const topologyListeners = new Set();
 
     function emitTopology() {
         const payload = {
-            topology: snn.topology(),
+            topology: currentNetworkPayload(),
             default_neurons: Array.from(DEFAULT_NEURON_IDS),
+            task: currentTask,
+            tasks: Object.entries(TASK_SPECS).map(([id, spec]) => ({
+                id, label: spec.label, kind: spec.kind,
+            })),
+            motors: TASK_SPECS[currentTask].motors.slice(),
         };
         if (window.editorView) {
             window.editorView.setTopology(payload.topology, payload.default_neurons);
         }
+        if (window.appUI && window.appUI.onTopology) window.appUI.onTopology(payload);
         for (const fn of topologyListeners) fn(payload);
     }
 
     function broadcastFrame() {
-        if (window.envView) window.envView.update(env.snapshot());
+        const envSnap = env.snapshot();
+        if (currentTask !== 'BUG') envSnap.reward_signal = gymRewardSignal(currentTask);
+        if (window.envView) window.envView.update(envSnap);
         if (window.editorView) {
             window.editorView.setActivity(snn.snapshotState());
             window.editorView.setPulses(snn.snapshotPulses(SIM_DT));
@@ -841,8 +1348,9 @@
         if (window.appUI) window.appUI.onState({
             t: simTime,
             sim_hz: simHz,
+            gym_env_hz: gymEnvHz,
             running,
-            env: env.snapshot(),
+            env: envSnap,
         });
     }
 
@@ -860,20 +1368,32 @@
             while (simAccumWall >= wallPerStep && steps < maxSteps) {
                 const ext = computeExternalInput();
                 snn.step(ext);
-                const fwd  = snn.spikes[snn.idToIdx.get('motor_forward')]  === 1;
-                const back = snn.spikes[snn.idToIdx.get('motor_backward')] === 1;
-                const lt   = snn.spikes[snn.idToIdx.get('motor_left')]     === 1;
-                const rt   = snn.spikes[snn.idToIdx.get('motor_right')]    === 1;
-                env.applyMotor(fwd, back, lt, rt);
-                env.step(SIM_DT);
-                simTime += SIM_DT;
+                env.applyMotorActions(activeMotorSpikes());
+                if (currentTask === 'BUG') {
+                    env.step(SIM_DT);
+                    simTime += SIM_DT;
+                }
                 simAccumWall -= wallPerStep;
                 steps++;
             }
             // If we couldn't keep up, drop the surplus to stay realtime-ish.
             if (simAccumWall > wallPerStep * maxSteps) simAccumWall = wallPerStep * maxSteps;
+
+            if (currentTask !== 'BUG') {
+                const envDt = 1 / Math.max(1, Math.min(GYM_ENV_HZ_MAX, gymEnvHz));
+                gymEnvAccumWall += dtWall;
+                let envSteps = 0;
+                while (gymEnvAccumWall >= envDt && envSteps < GYM_ENV_HZ_MAX) {
+                    env.step(envDt);
+                    simTime += envDt;
+                    gymEnvAccumWall -= envDt;
+                    envSteps++;
+                }
+                if (gymEnvAccumWall > envDt * GYM_ENV_HZ_MAX) gymEnvAccumWall = 0;
+            }
         } else {
             simAccumWall = 0;
+            gymEnvAccumWall = 0;
         }
 
         broadcastFrame();
@@ -883,6 +1403,9 @@
     // -------------------------------------------------- appSocket (event bus)
 
     const appBus = {
+        on(event, fn) {
+            if (event === 'topology' && typeof fn === 'function') topologyListeners.add(fn);
+        },
         emit(event, msg = {}) {
             switch (event) {
                 case 'control': {
@@ -907,12 +1430,25 @@
                     if (Number.isFinite(v)) simHz = Math.max(1, Math.min(SIM_HZ_MAX, v));
                     return;
                 }
+                case 'set_gym_env_hz': {
+                    const v = parseInt(msg.hz, 10);
+                    if (Number.isFinite(v)) gymEnvHz = Math.max(1, Math.min(GYM_ENV_HZ_MAX, v));
+                    return;
+                }
+                case 'set_task': {
+                    const task = normalizeTask(msg.task || currentTask);
+                    if (task !== currentTask) switchTask(task, true);
+                    emitTopology();
+                    broadcastFrame();
+                    return;
+                }
                 case 'place_object': {
                     const { kind, x, y } = msg;
+                    if (currentTask !== 'BUG') return;
                     if (kind === 'food')     env.addFood(x, y);
                     else if (kind === 'threat') env.addThreat(x, y, +msg.radius || 12);
                     else if (kind === 'obstacle') env.addObstacle(x - msg.w/2, y - msg.h/2, msg.w, msg.h);
-                    else if (kind === 'agent') { env.agent.x = +x; env.agent.y = +y; }
+                    else if (kind === 'agent' && env.agent) { env.agent.x = +x; env.agent.y = +y; }
                     return;
                 }
                 case 'remove_object': env.removeObject(msg.kind, +msg.id); return;
@@ -927,7 +1463,7 @@
                     return;
                 }
                 case 'manual_motor':
-                    for (const k of ['forward', 'backward', 'left', 'right']) {
+                    for (const k of Object.keys(manualMotor)) {
                         if (k in msg) manualMotor[k] = !!msg[k];
                     }
                     return;
@@ -975,11 +1511,15 @@
                     return;
                 case 'load_network':
                     if (msg.data) {
+                        const task = normalizeTask(msg.data.task || 'BUG');
+                        if (task !== currentTask) switchTask(task, true);
                         snn.loadJson(msg.data, DEFAULT_NEURON_IDS);
                         for (const id of DEFAULT_NEURON_IDS) {
                             if (!snn.idToIdx.has(id)) buildOneDefault(id);
                         }
+                        enforceDefaultReceptorParams(currentTask);
                         emitTopology();
+                        broadcastFrame();
                     }
                     return;
                 default:
@@ -999,14 +1539,22 @@
             emitTopology();
             requestAnimationFrame(tick);
         },
-        getTopology()        { return snn.topology(); },
+        getTopology()        { return currentNetworkPayload(); },
         getDefaultNeurons()  { return Array.from(DEFAULT_NEURON_IDS); },
+        getTask()            { return currentTask; },
+        getTasks() {
+            return Object.entries(TASK_SPECS).map(([id, spec]) => ({ id, label: spec.label, kind: spec.kind }));
+        },
         loadJson(data) {
+            const task = normalizeTask(data.task || 'BUG');
+            if (task !== currentTask) switchTask(task, true);
             snn.loadJson(data, DEFAULT_NEURON_IDS);
             for (const id of DEFAULT_NEURON_IDS) {
                 if (!snn.idToIdx.has(id)) buildOneDefault(id);
             }
+            enforceDefaultReceptorParams(currentTask);
             emitTopology();
+            broadcastFrame();
         },
     };
 })();

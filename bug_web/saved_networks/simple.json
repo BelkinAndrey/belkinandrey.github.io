@@ -664,5 +664,7 @@
       "color": "#b26206",
       "comment": ""
     }
-  ]
+  ],
+  "format_version": 2,
+  "task": "BUG"
 }
