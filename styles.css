@@ -332,6 +332,9 @@ a {
 }
 
 .project-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     color: #d8e4f2;
     font-size: 13px;
     font-weight: 700;
@@ -342,6 +345,12 @@ a {
     background: rgba(13, 21, 34, 0.86);
     border: 1px solid var(--line);
     transition: color 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.project-link-icon {
+    width: 15px;
+    height: 15px;
+    flex: 0 0 15px;
 }
 
 .project-link:hover,

@@ -3,7 +3,8 @@
 Edit `projects.json` to add, remove, or reorder cards on the homepage.
 The homepage reads this file at runtime, so `index.html` does not need to change.
 
-Each project can have any combination of links:
+Each project can have any combination of links.
+Known link types `page`, `source`, and `youtube` get matching icons automatically:
 
 ```json
 {

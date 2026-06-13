@@ -1,9 +1,16 @@
 const PROJECTS_URL = "data/projects.json";
+const SVG_NS = "http://www.w3.org/2000/svg";
 
 const LINK_LABELS = {
     page: "Page",
     source: "Source",
     youtube: "YouTube"
+};
+
+const LINK_ICONS = {
+    page: "M6 3.5h8l4 4v13H6v-17z M14 3.5V8h4 M9 13h6 M9 16h6",
+    source: "M8 9l-4 3 4 3 M16 9l4 3-4 3 M14 5l-4 14",
+    youtube: "M10 9.75 15 12l-5 2.25v-4.5z M21 12c0 2.1-.2 3.5-.55 4.25-.23.49-.62.88-1.11 1.11-1.14.54-7.34.54-7.34.54s-6.2 0-7.34-.54a2 2 0 0 1-1.11-1.11C3.2 15.5 3 14.1 3 12s.2-3.5.55-4.25c.23-.49.62-.88 1.11-1.11C5.8 6.1 12 6.1 12 6.1s6.2 0 7.34.54c.49.23.88.62 1.11 1.11.35.75.55 2.15.55 4.25z"
 };
 
 export function getProjectLinks(project) {
@@ -23,6 +30,10 @@ export function getLinkLabel(link) {
     return link.label || LINK_LABELS[link.type] || "Link";
 }
 
+export function getLinkIconPath(type) {
+    return LINK_ICONS[type] || null;
+}
+
 export function isExternalUrl(url) {
     return /^https?:\/\//i.test(url);
 }
@@ -39,6 +50,30 @@ function applyLinkAttributes(anchor, url) {
         anchor.target = "_blank";
         anchor.rel = "noopener";
     }
+}
+
+function createLinkIcon(type, documentRef) {
+    const iconPath = getLinkIconPath(type);
+
+    if (!iconPath) {
+        return null;
+    }
+
+    const svg = documentRef.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("class", "project-link-icon");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.8");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+
+    const path = documentRef.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", iconPath);
+    svg.append(path);
+
+    return svg;
 }
 
 function createPreview(project, primaryLink, documentRef) {
@@ -127,8 +162,17 @@ function createProjectLinks(project, links, documentRef) {
     links.forEach((link) => {
         const anchor = documentRef.createElement("a");
         anchor.className = `project-link project-link-${getLinkTypeClass(link.type)}`;
-        anchor.textContent = getLinkLabel(link);
         applyLinkAttributes(anchor, link.url);
+
+        const icon = createLinkIcon(link.type, documentRef);
+        const label = documentRef.createElement("span");
+        label.textContent = getLinkLabel(link);
+
+        if (icon) {
+            anchor.append(icon);
+        }
+
+        anchor.append(label);
         nav.append(anchor);
     });
 

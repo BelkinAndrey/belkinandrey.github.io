@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { getPrimaryLink } from '../projects.mjs';
+import { getLinkIconPath, getPrimaryLink } from '../projects.mjs';
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const projects = JSON.parse(await readFile(new URL('../data/projects.json', import.meta.url), 'utf8'));
@@ -37,6 +37,12 @@ test('project links can include page, source, and youtube together', () => {
   };
 
   assert.equal(getPrimaryLink(project).url, 'example/index.html');
+});
+
+test('project link types expose matching icons', () => {
+  assert.ok(getLinkIconPath('page'));
+  assert.ok(getLinkIconPath('source'));
+  assert.ok(getLinkIconPath('youtube'));
 });
 
 test('homepage preserves social destinations', () => {
