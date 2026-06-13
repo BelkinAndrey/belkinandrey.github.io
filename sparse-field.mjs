@@ -42,8 +42,8 @@ export function pickSparseCellPosition(random = Math.random, metrics) {
   const row = Math.min(metrics.rows - 1, Math.floor(next() * metrics.rows));
 
   return {
-    x: Math.min(metrics.width - metrics.cellSize, col * metrics.tileSize + metrics.offset),
-    y: Math.min(metrics.height - metrics.cellSize, row * metrics.tileSize + metrics.offset)
+    x: Math.max(0, Math.min(metrics.width - metrics.cellSize, col * metrics.tileSize + metrics.offset)),
+    y: Math.max(0, Math.min(metrics.height - metrics.cellSize, row * metrics.tileSize + metrics.offset))
   };
 }
 
