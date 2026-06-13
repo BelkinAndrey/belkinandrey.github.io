@@ -1,0 +1,44 @@
+[
+  {
+    "title": "Spiking Bug",
+    "description": "Spiking neural network agent in a live arena",
+    "preview": "previews/bug_web.gif",
+    "fallbackPreview": "previews/bug_web.svg",
+    "links": [
+      {
+        "type": "page",
+        "label": "Page",
+        "url": "bug_web/index.html",
+        "primary": true
+      }
+    ]
+  },
+  {
+    "title": "cogFlux",
+    "description": "Neural network editor with body simulations",
+    "preview": "previews/tonic.gif",
+    "fallbackPreview": "previews/tonic.svg",
+    "links": [
+      {
+        "type": "page",
+        "label": "Page",
+        "url": "tonic/index.html",
+        "primary": true
+      }
+    ]
+  },
+  {
+    "title": "cogFlux - Spike",
+    "description": "Spike-based neural network editor and visualizer",
+    "preview": "previews/spike.gif",
+    "fallbackPreview": "previews/spike.svg",
+    "links": [
+      {
+        "type": "page",
+        "label": "Page",
+        "url": "spike/index.html",
+        "primary": true
+      }
+    ]
+  }
+]
