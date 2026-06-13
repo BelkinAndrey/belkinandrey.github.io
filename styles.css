@@ -12,7 +12,7 @@
     --line-strong: rgba(45, 212, 191, 0.48);
     --text: #eef6ff;
     --muted: #95a3b8;
-    --dim: #64748b;
+    --dim: #71819a;
     --cyan: #22d3ee;
     --teal: #2dd4bf;
     --blue: #60a5fa;
@@ -181,10 +181,10 @@ a {
     box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.18);
 }
 
-.social-link.telegram:hover { color: #fff; background: #229ed9; border-color: #229ed9; }
+.social-link.telegram:hover { color: #fff; background: #147db1; border-color: #147db1; }
 .social-link.youtube:hover { color: #fff; background: #ff0000; border-color: #ff0000; }
-.social-link.medium:hover { color: #fff; background: #00ab6c; border-color: #00ab6c; }
-.social-link.habr:hover { color: #fff; background: #65a3be; border-color: #65a3be; }
+.social-link.medium:hover { color: #fff; background: #007f50; border-color: #007f50; }
+.social-link.habr:hover { color: #fff; background: #3f7f98; border-color: #3f7f98; }
 .social-link.x:hover { color: #fff; background: #000; border-color: #fff; }
 
 .copy {
@@ -227,12 +227,19 @@ a {
     transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
-.project-card:hover,
-.project-card:focus-visible {
+.project-card:hover {
     transform: translateY(-3px);
     border-color: var(--line-strong);
     box-shadow: 0 22px 48px rgba(14, 165, 233, 0.22);
     outline: none;
+}
+
+.project-card:focus-visible {
+    transform: translateY(-3px);
+    border-color: var(--line-strong);
+    box-shadow: 0 22px 48px rgba(14, 165, 233, 0.28);
+    outline: 2px solid var(--cyan);
+    outline-offset: 3px;
 }
 
 .preview {

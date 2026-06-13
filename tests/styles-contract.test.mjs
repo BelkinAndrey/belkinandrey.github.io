@@ -27,3 +27,18 @@ test('styles define interactive card and social states', () => {
 test('styles do not draw a visible line grid background', () => {
   assert.doesNotMatch(css, /1px,\s*transparent\s+1px/);
 });
+
+test('project cards expose a visible keyboard focus ring', () => {
+  assert.match(css, /\.project-card:focus-visible\s*{[^}]*outline:\s*2px\s+solid\s+var\(--cyan\)/s);
+  assert.match(css, /\.project-card:focus-visible\s*{[^}]*outline-offset:\s*3px/s);
+});
+
+test('small copy text keeps subdued but readable contrast', () => {
+  assert.match(css, /--dim:\s*#71819a;|\.copy\s*{[^}]*color:\s*var\(--muted\)/s);
+});
+
+test('social hover backgrounds keep contrast with white icons', () => {
+  assert.match(css, /\.social-link\.telegram:hover\s*{[^}]*background:\s*#147db1/s);
+  assert.match(css, /\.social-link\.medium:hover\s*{[^}]*background:\s*#007f50/s);
+  assert.match(css, /\.social-link\.habr:hover\s*{[^}]*background:\s*#3f7f98/s);
+});
