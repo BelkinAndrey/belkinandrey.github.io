@@ -12,9 +12,14 @@
         "primary": true
       },
       {
-      "type": "youtube",
-      "label": "YouTube",
-      "url": "https://youtu.be/a68uZ0F3QLw?si=ON8c5C47FU5Y8CJu"
+        "type": "youtube",
+        "label": "YouTube",
+        "url": "https://youtu.be/a68uZ0F3QLw?si=ON8c5C47FU5Y8CJu"
+      },
+      {
+        "type": "source",
+        "label": "Source",
+        "url": "https://github.com/BelkinAndrey/spiking-bug"
       }
     ]
   },
